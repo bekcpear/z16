@@ -4,6 +4,14 @@
 # license: GPLv2
 #
 
+#Func: write to file
+#      $1: contents <STRING>
+#      $2: file     <STRING>
+#return: $?
+function write() {
+  :
+}
+
 #Func: make symbolic link
 #      $1: source <STRING>
 #      $2: target <STRING>
@@ -70,19 +78,19 @@ function config() {
 function execmain() {
   case ${CMD} in
     init)
-      init ${INSTANCE[@]}
+      init ${INSTANCES[@]}
       ;;
     list)
-      list ${INSTANCE[@]}
+      list ${INSTANCES[@]}
       ;;
     load)
-      load ${INSTANCE[@]}
+      load ${INSTANCES[@]}
       ;;
     unload)
-      unload ${INSTANCE[@]}
+      unload ${INSTANCES[@]}
       ;;
     config)
-      config ${INSTANCE[@]}
+      config ${INSTANCES[@]}
       ;;
     help)
       showhelp

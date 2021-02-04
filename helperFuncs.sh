@@ -38,4 +38,10 @@ function checkexi() {
   :
 }
 
+#Func: do some check
+#return: $?
+function check() {
+  :
+}
+
 # vim: et:ts=2:sts:sw=2
