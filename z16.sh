@@ -5,10 +5,12 @@
 #
 
 # commands:
+#   eval
 #   ln
 #   unlink
 #   grep
 #   awk
+#   mkdir
 
 # paramaters:
 #     optional command: init|load|unload|config|help
