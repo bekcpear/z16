@@ -12,9 +12,9 @@
 #   grep
 #   awk
 #   mkdir
-#   getopt
+#   getopt <Linux VERSION>
+#   readlink <GNU VERSION>
 #   chown
-#   sudo
 
 # paramaters:
 #     optional command: init|load|unload|config|help
@@ -50,6 +50,7 @@ set -Beh
 AVAILABLECMD="init|config|load|unload"
 AVAILABLECMD_NOARGS="list|help"
 declare -a INSTANCES
+declare -a PATH_STACK
 declare -A CONFIGS
 CMD='help'
 CUSER="$(id -nu)"
@@ -81,8 +82,6 @@ eval "D_${D_VARS_G[0]}='.z16.l.conf'"
 eval "D_${D_VARS_G[1]}='/tmp/z16.tmp.d'"
 eval "D_${D_VARS_G[2]}=''"
 eval "D_${D_VARS_G[3]}=''"
-
-eval ""
 
 source "${0%/*}"/parseFuncs.sh
 source "${0%/*}"/helperFuncs.sh
@@ -134,6 +133,7 @@ set -e
 #
 execmain
 
+exit
 # test out
 #
 declare -p CONFIGS

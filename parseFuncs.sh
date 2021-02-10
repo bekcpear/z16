@@ -100,6 +100,7 @@ function parseparam() {
         if [[ ${#INSTANCES[@]} == 0 ]]; then
           INSTANCES=( "${arg}" )
         else
+          [[ "${INSTANCES[@]}" =~ (^|[[:space:]])${arg}([[:space:]]|$) ]] || \
           INSTANCES=( "${INSTANCES[@]}" "${arg}" )
         fi
         ;;
