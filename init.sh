@@ -63,21 +63,17 @@ if [[ $? == 0 ]]; then
   echo "** directory of instances prepared."
 fi
 
-# make global configuration file of instance
+# make global configuration file of instances
 #
 echo ">> Create global congiguration file of instances"
 eval "INIT_VARS[${D_VARS_G[0]}_C]='The local configuration file name of the instance'"
 eval "INIT_VARS[${D_VARS_G[0]}]=\${D_${D_VARS_G[0]}}"
 eval "INIT_VARS[${D_VARS_G[1]}_C]='The parent folder path of the instance'"
 eval "INIT_VARS[${D_VARS_G[1]}]=\${D_${D_VARS_G[1]}}"
-eval "INIT_VARS[${D_VARS_G[2]}_C]='The user that executes commands'"
+eval "INIT_VARS[${D_VARS_G[2]}_C]='The owner of the symbolic links'"
 eval "INIT_VARS[${D_VARS_G[2]}]=\${D_${D_VARS_G[2]}}"
-eval "INIT_VARS[${D_VARS_G[3]}_C]='The owner of the symbolic links'"
+eval "INIT_VARS[${D_VARS_G[3]}_C]='The group of the symbolic links'"
 eval "INIT_VARS[${D_VARS_G[3]}]=\${D_${D_VARS_G[3]}}"
-eval "INIT_VARS[${D_VARS_G[4]}_C]='The group of the symbolic links'"
-eval "INIT_VARS[${D_VARS_G[4]}]=\${D_${D_VARS_G[4]}}"
-eval "INIT_VARS[${D_VARS_G[5]}_C]='The umask that should be used when creating symbolic links'"
-eval "INIT_VARS[${D_VARS_G[5]}]=\${D_${D_VARS_G[5]}}"
 customizevar D_VARS_G ${#D_VARS_G[@]}
 eval "GOLCONFPATH=\"\${INIT_VARS[${D_VARS_Z16[0]}]%/}/\${INIT_VARS[${D_VARS_Z16[1]}]}\""
 writevar D_VARS_G ${#D_VARS_G[@]} "${GOLCONFPATH}" "This is the golbal configuration file of instances."

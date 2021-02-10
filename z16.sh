@@ -5,12 +5,16 @@
 #
 
 # commands:
+#   date
 #   eval
 #   ln
 #   unlink
 #   grep
 #   awk
 #   mkdir
+#   getopt
+#   chown
+#   sudo
 
 # paramaters:
 #     optional command: init|load|unload|config|help
@@ -32,8 +36,6 @@
 # about configiguration file, .z16.l.conf:
 #  #parent folder path for the symbolic link
 #   parent: <path> (default to /tmp/z16.tmp.d for safety)
-#  #create the link by which user
-#   operator: <username>
 #  #the link owner
 #   owner: <username>
 #  #the link group
@@ -41,17 +43,23 @@
 #  #default umask
 #   umask: 022
 
-set -e
+set +abfhkmnptuvBCEHPT
+set -Beh
 
 #TODO: check identifier conflict
-AVAILABLECMD=(init list load unload config help)
+AVAILABLECMD="init|config|load|unload"
+AVAILABLECMD_NOARGS="list|help"
 declare -a INSTANCES
 declare -A CONFIGS
-CMD=
+CMD='help'
+CUSER="$(id -nu)"
+CGROUP="$(id -ng)"
 
-#DEFAULT READONLY VARIABLES
-D_CMD='help'
+#READONLY VARIABLE
+declare -r Z16_TMPDIR='/tmp/.z16_tmpdir_de82969a-064c-43d7-b761-6061eb1669f8'
 #DEFAULT VARIABLES THAT CAN ONLY BE MODIFIED BY COMMAND LINE OPTION
+VERBOSEOUT1=/dev/null
+VERBOSEOUT2=/dev/null
 CONFPATH="${HOME%/}/.config/z16rc"
 #DEFAULT VARIABLES
 D_VARS_Z16=(
@@ -62,10 +70,8 @@ eval "D_${D_VARS_Z16[0]}='${HOME%/}/.local/share/z16'"
 eval "D_${D_VARS_Z16[1]}='.z16.g.conf'"
 D_VARS_L=(
   PARENTDIR
-  OPERATOR
   USER
   GROUP
-  UMASK
 )
 D_VARS_G=(
   INSTLOCALCONFNAME
@@ -75,8 +81,6 @@ eval "D_${D_VARS_G[0]}='.z16.l.conf'"
 eval "D_${D_VARS_G[1]}='/tmp/z16.tmp.d'"
 eval "D_${D_VARS_G[2]}=''"
 eval "D_${D_VARS_G[3]}=''"
-eval "D_${D_VARS_G[4]}=''"
-eval "D_${D_VARS_G[5]}='022'"
 
 eval ""
 
@@ -91,7 +95,6 @@ parseparam "$@"
 # do initial configurations
 #
 source "${0%/*}"/init.sh
-exit
 
 # do some check
 #
@@ -111,15 +114,22 @@ for (( idx = 0; idx < ${#D_VARS_G[@]}; ++idx )); do
   eval "CONFIGS[${D_VARS_G[idx]}]=\${CONFIGS[${D_VARS_G[idx]}]:=\${D_${D_VARS_G[idx]}}}"
 done
 
-# parse instance local configurations
-#
-for (( idx = 0; idx < ${#INSTANCES[@]}; ++idx )); do
-  eval "declare -A CONFIGS_${idx}"
-  eval "parseconfigs \
-    "${CONFIGS[${D_VARS_Z16[0]}]%/}"/"${INSTANCES[idx]}"/"${CONFIGS[${D_VARS_G[0]}]#/}" \
-    D_VARS_L CONFIGS_${idx}"
-done
-
+set +e
+if [[ ${CMD} =~ ${AVAILABLECMD} && ${CMD} != init ]]; then
+  # parse instance local configurations
+  #
+  for (( idx = 0; idx < ${#INSTANCES[@]}; ++idx )); do
+    eval "declare -A CONFIGS_${idx}"
+    eval "parseconfigs \
+      "${CONFIGS[${D_VARS_Z16[0]}]%/}"/"${INSTANCES[idx]}"/"${CONFIGS[${D_VARS_G[0]}]#/}" \
+      D_VARS_L CONFIGS_${idx}"
+    if [[ ${?} != 0 ]]; then
+      printlog "you may need to initialize instances \"${INSTANCES[idx]}\" first." warn
+      fatalerr "parse configurations of \"${INSTANCES[idx]}\" failed."
+    fi
+  done
+fi
+set -e
 # exec main commands
 #
 execmain
@@ -128,6 +138,8 @@ execmain
 #
 declare -p CONFIGS
 declare -p CONFIGS_0
+declare -p CONFIGS_1
+declare -p CONFIGS_2
 #set
 
 # vim: et:ts=2:sts:sw=2

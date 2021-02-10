@@ -7,15 +7,40 @@
 #Func: show help informations
 #retrun: $?
 function showhelp() {
-  :
+  echo "===help msg==="
 }
 
 #Func: print log
 #      $1: msg  <STRING>
-#    [$2]: type <warn|err> (default: info)
+#    [$2]: type <stage|warn|err> (default: info)
 #retrun: $?
 function printlog() {
-  :
+  local type="${2:-info}"
+  local color=
+  local out=
+  case "${type}" in
+    info)
+      type=" info"
+      color="\e[0m"
+      out="${VERBOSEOUT1}"
+      ;;
+    stage)
+      type="stage"
+      color="\e[0m"
+      out="&1"
+      ;;
+    warn)
+      type=" warn"
+      color="\e[33m"
+      out="&2"
+      ;;
+    err)
+      type="error"
+      color="\e[31m"
+      out="&2"
+      ;;
+  esac
+  eval "echo -e \"${color}[$(date +%H:%M:%S) ${type}] ${1//\"/\\\"}\e[0m\" >${out}"
 }
 
 #Func: exit shell and print error
@@ -38,7 +63,7 @@ function checkexi() {
   :
 }
 
-#Func: do some check
+#Func: do some check, e.g.: check executed user and the owner/group of symbolic links
 #return: $?
 function check() {
   :

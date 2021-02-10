@@ -10,11 +10,14 @@
 #      $3 <IDENTIFIER> (array: pass values to it)
 #return: $?
 function parseconfigs() {
+  local -i ret=0
   shopt -s extglob
   eval "local opts=(\${${2}[@]})"
   for opt in ${opts[@]}; do
-    eval "local val=\$(grep -Ei '^[[:space:]]*${opt}[[:space:]]*=' '${1}' \
-      | awk -F'=[[:space:]]*' '{printf \$2}')"
+    [[ -d ${1%/*} ]] || ret+=$?
+    local val
+    eval "val=\$(grep -Ei '^[[:space:]]*${opt}[[:space:]]*=' '${1}' 2>${VERBOSEOUT2}) || true"
+    eval "val=\$(echo '${val}' | awk -F'=[[:space:]]*' '{printf \$2}') || ret+=\$?"
     if [[ "${val}" =~ ^\"([^\"]*)\"|^\'([^\']*)\'|^\`([^\`]*)\` ]]; then
       val="${BASH_REMATCH[1]:-${val}}"
       val="${BASH_REMATCH[2]:-${val}}"
@@ -25,28 +28,73 @@ function parseconfigs() {
     eval "${3}['${opt}']='${val}'"
   done
   shopt -u extglob
+  return ${ret}
 }
 
 #Func: parse shell parameters
 #      $@
-#retrun: $?
 function parseparam() {
-  CMD=${DEFAULTCMD}
+  set +e
+  unset GETOPT_COMPATIBLE
+  getopt -T
+  if [[ ${?} != 4 ]]; then
+    fatalerr "The command 'getopt' of Linux version is necessory to parse parameters."
+  fi
+  local args
+  args=$(getopt -o 'vc:' -l 'verbose,config:' -n 'z16' -- "$@")
+  if [[ ${?} != 0 ]]; then
+    showhelp
+    exit 1
+  fi
+  set -e
+  eval "set -- ${args}"
+  while true; do
+    case "${1}" in
+      -v|--verbose)
+        VERBOSEOUT1='&1'
+        VERBOSEOUT2='&2'
+        shift
+        ;;
+      -c|--config)
+        shift
+        CONFPATH="${1}"
+        shift
+        ;;
+      --)
+        shift
+        break
+        ;;
+      *)
+        fatalerr "unknow error"
+        ;;
+    esac
+  done
   local cmd
-  for cmd in ${AVAILABLECMD[@]}; do
+  local avacmd=( ${AVAILABLECMD//|/ } ${AVAILABLECMD_NOARGS//|/ } )
+  for cmd in ${avacmd[@]}; do
     if [[ "${cmd}" == "${1}" ]]; then
       CMD=${1}
       shift
       break
     fi
   done
+  if [[ ${CMD} =~ ${AVAILABLECMD} && ${#} < 1 ]]; then
+    fatalerr "Action '${CMD}' needs more arguments!" True
+  fi
+  if [[ ${CMD} =~ ${AVAILABLECMD_NOARGS} && ${#} > 0 ]]; then
+    eval "printlog 'arguments \"${@}\" ignored' warn"
+    return
+  fi
   for arg; do
     case "${arg}" in
       -*)
-        # OPT - VALUE!!!TODO
+        printlog "Unrecognized instance name '${arg}' has been ignored." warn
         ;;
       *[[:space:]]*)
         fatalerr "Instance name should not contain spaces!"
+        ;;
+      */*)
+        fatalerr "Instance name should not contain slashes!"
         ;;
       *)
         if [[ ${#INSTANCES[@]} == 0 ]]; then
@@ -57,12 +105,6 @@ function parseparam() {
         ;;
     esac
   done
-}
-
-#Func: do initial configurations
-#return: $?
-function initconfig() {
-  :
 }
 
 # vim: et:ts=2:sts:sw=2
