@@ -56,14 +56,6 @@ echo ">> Initialize z16"
 _init_customizevar D_VARS_Z16 ${#D_VARS_Z16[@]}
 _init_writevar D_VARS_Z16 ${#D_VARS_Z16[@]} "${CONFPATH}" "This is the main configuration file of z16."
 
-# prepare directory
-#
-echo ">> Prepare the directory of instances"
-mkdir -p "${INIT_VARS[${D_VARS_Z16[0]}]}"
-if [[ $? == 0 ]]; then
-  echo "** directory of instances prepared."
-fi
-
 # make global configuration file of instances
 #
 echo ">> Create global congiguration file of instances"

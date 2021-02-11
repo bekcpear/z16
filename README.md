@@ -31,11 +31,11 @@ The project name is **整** (Unicode: U+6574; pinyin: zhěng). The number of it'
    z16 #default to show help message
    ```
 
-   z16 will check it's system configuration file first, and then check it's user level configuration file.
+   z16 will check its system-wide configuration file first, and then check its user-level configuration file.
 
-   If no config file exists, z16 will prompt to initalize itself.
+   If both configuration files do not exist, z16 will prompt to initalize itself.
 
-   For more detailed instructions, please see the _"How to configure"_ section below.
+   For more detailed instructions, please see the [How to configure](#how-to-configure) section below.
 
 2. Initialize instance(s):
 
@@ -43,11 +43,11 @@ The project name is **整** (Unicode: U+6574; pinyin: zhěng). The number of it'
    z16 init <a-instance> [<more-instances>...]
    ```
 
-   When initializing instances, z16 will check the path of directory which contains instances from it's configuration file. You can configure the path by yourself.
+   When initializing instances, z16 will get the path of directory which contains instances from its basic configuration file.
 
-   And then, z16 will create the instance directory under the path (the directory name is the same as the instance name) and make a commented local config file for this instance.
+   And then, z16 will create the instance directory under the path (the directory name is the same as the instance name) and make a commented local configuration file for this instance.
 
-3. Put your files in the proper instance directory, and modify the local configuration file of the instance (the default name is `.z16.l.conf`), especially the `parentdir` config.
+3. **Put your files in the proper instance directory, and modify the local configuration file of the instance, especially the `parentdir` config.**
 
 4. Now you can load the configured instance(s):
 
@@ -61,7 +61,7 @@ The project name is **整** (Unicode: U+6574; pinyin: zhěng). The number of it'
    2. change the ownership of symbolic links and its target files to configured user/group or current effective user/group.
    3. if everything is ok, z16 will merge temporary created symbolic links to the root filesystem.
 
-5. Use `unload` command to unlink all symbolic links belonging to given instance(s) directly:
+* `unload` command is used to unlink all symbolic links belonging to given instance(s) directly:
 
    ```bash
    z16 unload <configured-instance> [<more-configured-instances>...]
@@ -83,14 +83,14 @@ z16 has several configuration files:
 
    *User-level configuration file will override the same configurations that have been set in the system-wide configuration file.*
 
-   **One of the above two must exist.**
+   **At least one of the above two files exists.**
 
 2. global configuration file for all instances, `<instances-container-dir>/<global-conf-filename>`
 
    At present, this configuration files are used to configure:
 
-   * the name of the local configuration file for any instance, default to `.z16.l.conf`
-   * default parent directory of any instance, it is usually set to a safe path to prevent the system file from possibly being damaged due to the missing parent directory configuration of instance. default to `/tmp/z16.tmp.d`
+   * the name of the local configuration file for every instance, default to `.z16.l.conf`
+   * default parent directory of every instance, it is usually set to a safe path to prevent the system file from possibly being damaged due to the missing parent directory configuration of instance. default to `/tmp/z16.tmp.d`
    * the user of symbolic links and its target files of the instance, default to current effective user
    * the group of symbolic links and its target files of the instance, default to current effective group
 
@@ -98,7 +98,7 @@ z16 has several configuration files:
 
    At present, this configuration files are used to configure:
 
-   * parent directory of this instance, **this config should be set everytime**
+   * parent directory of this instance, **this config should be set everytime the instance initialized**
    * the user of symbolic links and its target files of this instance, default to the global user setting
    * the group of symbolic links and its target files of this instance, default to the global group setting
 
