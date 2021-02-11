@@ -23,7 +23,26 @@ The project name is **整** (Unicode: U+6574; pinyin: zhěng). The number of it'
 * sounds agile
 * and concise
 
-## Workflow & how to use it
+## Installation & Run
+
+* Gentoo Linux
+
+  ```bash
+  eselect repository enable ryans #or `layman -a ryans && layman -S`
+  echo "\napp-admin/z16 **" >> /etc/portage/package.accept_keywords
+  emerge -av app-admin/z16
+  z16
+  ```
+
+* Others
+
+  ```bash
+  git clone https://github.com/bekcpear/z16.git
+  cd z16
+  ./z16.sh
+  ```
+
+## Workflow & How to use it
 
 1. Ensure that z16 can read its configuration file:
 

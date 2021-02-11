@@ -22,6 +22,25 @@
 * 听起来比较敏捷
 * 并且简明
 
+## 安装及运行
+
+* Gentoo Linux
+
+  ```bash
+  eselect repository enable ryans #或 `layman -a ryans && layman -S`
+  echo "\napp-admin/z16 **" >> /etc/portage/package.accept_keywords
+  emerge -av app-admin/z16
+  z16
+  ```
+
+* 其他
+
+  ```bash
+  git clone https://github.com/bekcpear/z16.git
+  cd z16
+  ./z16.sh
+  ```
+
 ## 工作流程以及使用方法
 
 1. 确保 z16 可以读取到它的配置文件
