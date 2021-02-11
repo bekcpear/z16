@@ -162,7 +162,7 @@ function init() {
       insts=( "${insts[@]}" "${inst}" )
       set -e
       if [[ ${ret} > 0 ]]; then
-        fatalerr "Initial instance '${inst}' failed!"
+        fatalerr "Initialize instance '${inst}' failed!"
       fi
     fi
     #TODO: more detailed configurations.

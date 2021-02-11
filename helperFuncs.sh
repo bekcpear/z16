@@ -16,7 +16,7 @@ options:
   --verbose, -v         Show more informations.
 
 commands:
-  init   (<instance>)   Initial instance(s).
+  init   (<instance>)   Initialize instance(s).
   load   (<instance>)   Create symbolic links to files of the instance(s).
   unload (<instance>)   Remove symbolic links belonging to the instance(s).
   list                  List all instances.

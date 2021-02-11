@@ -78,7 +78,7 @@ FORCEOVERRIDE=0
 VERBOSEOUT1=/dev/null
 VERBOSEOUT2=/dev/null
 declare -r SYSCONFPATH="/etc/z16/z16rc"
-CONFPATH="${HOME%/}/.config/z16rc"
+CONFPATH="${HOME%/}/.config/z16/z16rc"
 #DEFAULT VARIABLES
 D_VARS_Z16=(
   INSTDIR
@@ -119,7 +119,7 @@ source "${0%/*}"/mainFuncs.sh
 #
 parseparam "$@"
 
-# do initial configurations
+# do initialize configurations
 #
 source "${0%/*}"/init.sh
 

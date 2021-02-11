@@ -48,11 +48,11 @@ function _init_writevar() {
 
 # make z16rc
 #
-eval "INIT_VARS[${D_VARS_Z16[0]}_C]='The directory to store instances'"
+eval "INIT_VARS[${D_VARS_Z16[0]}_C]='The directory to store instances, absolute path'"
 eval "INIT_VARS[${D_VARS_Z16[0]}]=\${D_${D_VARS_Z16[0]}}"
 eval "INIT_VARS[${D_VARS_Z16[1]}_C]='The global configuration file name of instances'"
 eval "INIT_VARS[${D_VARS_Z16[1]}]=\${D_${D_VARS_Z16[1]}}"
-echo ">> Initial z16"
+echo ">> Initialize z16"
 _init_customizevar D_VARS_Z16 ${#D_VARS_Z16[@]}
 _init_writevar D_VARS_Z16 ${#D_VARS_Z16[@]} "${CONFPATH}" "This is the main configuration file of z16."
 
@@ -69,7 +69,7 @@ fi
 echo ">> Create global congiguration file of instances"
 eval "INIT_VARS[${D_VARS_G[0]}_C]='The local configuration file name of the instance'"
 eval "INIT_VARS[${D_VARS_G[0]}]=\${D_${D_VARS_G[0]}}"
-eval "INIT_VARS[${D_VARS_G[1]}_C]='The parent folder path of the instance'"
+eval "INIT_VARS[${D_VARS_G[1]}_C]='The parent folder path of the instance, absolute path'"
 eval "INIT_VARS[${D_VARS_G[1]}]=\${D_${D_VARS_G[1]}}"
 eval "INIT_VARS[${D_VARS_G[2]}_C]='The owner of the symbolic links'"
 eval "INIT_VARS[${D_VARS_G[2]}]=\${D_${D_VARS_G[2]}}"

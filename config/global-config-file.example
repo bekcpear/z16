@@ -1,0 +1,14 @@
+# This is the golbal configuration file of instances.
+#
+
+# The local configuration file name of the instance
+INSTLOCALCONFNAME = .z16.l.conf
+
+# The parent folder path of the instance, absolute path
+PARENTDIR = /tmp/z16.tmp.d
+
+# The owner of the symbolic links
+USER =
+
+# The group of the symbolic links
+GROUP =
