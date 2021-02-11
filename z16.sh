@@ -4,22 +4,36 @@
 # license: GPLv2
 #
 
-# commands:
-#   date
-#   eval
-#   ln
-#   unlink
-#   grep
-#   awk
-#   mkdir
-#   getopt <Linux VERSION>
-#   readlink <GNU VERSION>
-#   chown
+# Dependencies:
+#
+#  * sys-apps/coreutils
+#  |-- chown
+#  |-- cp
+#  |-- date
+#  |-- echo
+#  |-- id
+#  |-- ln
+#  |-- ls
+#  |-- mkdir
+#  |-- readlink (GNU version)
+#  |-- rm
+#  |-- touch
+#  |-- tr
+#  `-- unlink
+#
+#  * sys-apps/grep
+#  `-- grep
+#
+#  * sys-apps/util-linux
+#  `-- getopt (Linux version)
+#
+#  * sys-libs/glibc
+#  `-- getent
 
 # paramaters:
-#     optional command: init|load|unload|config|help
+#              actions: init|load|unload|config|help
 #     optional options: --/-OPT VALUE !!!TODO
-#   necessary argument: <INSTANCE NAME>
+#   necessary argument: (<INSTANCE NAME>)
 
 # file structure:
 #   <MAIN-FOLDER>
@@ -28,33 +42,33 @@
 #           |-- .z16.l.conf (default name)
 #           |-- <FILE/DIRECTORY>
 #           |   # support prefixed with `dot-` instead of `.`
-#           |-- ...
+#           `-- ...
 #     |-- <INSTANCE-NAME-1>
 #     |-- <INSTANCE-NAME-2>
-#     |-- ...
+#     `-- ...
 
 # about configiguration file, .z16.l.conf:
 #  #parent folder path for the symbolic link
 #   parent: <path> (default to /tmp/z16.tmp.d for safety)
-#  #the link owner
+#  #the owner of the link and its dereference file
 #   owner: <username>
-#  #the link group
+#  #the group of the link and its dereference file
 #   group: <groupname>
-#  #default umask
-#   umask: 022
+#
+# TODO: about SUID/SGID
+# TODO: SELinux support
+#
+#
 
 set +abfhkmnptuvBCEHPT
 set -Beh
 
-#TODO: check identifier conflict
 AVAILABLECMD="init|config|load|unload"
 AVAILABLECMD_NOARGS="list|help"
 declare -a INSTANCES
 declare -a PATH_STACK
 declare -A CONFIGS
 CMD='help'
-CUSER="$(id -nu)"
-CGROUP="$(id -ng)"
 
 #READONLY VARIABLE
 declare -r Z16_TMPDIR='/tmp/.z16_tmpdir_de82969a-064c-43d7-b761-6061eb1669f8'
@@ -83,6 +97,17 @@ eval "D_${D_VARS_G[1]}='/tmp/z16.tmp.d'"
 eval "D_${D_VARS_G[2]}=''"
 eval "D_${D_VARS_G[3]}=''"
 
+#current user and groups
+CUSER=$(id -u)
+CGROUP=$(id -g)
+CGROUPS_A=( $(id -G) )
+CGROUPS=
+for CGROUPTMP in "${CGROUPS_A[@]}"; do
+  CGROUPS="${CGROUPS}|^${CGROUPTMP}\$"
+done
+CGROUPS="${CGROUPS#|}"
+unset CGROUPS_A CGROUPTMP
+
 source "${0%/*}"/parseFuncs.sh
 source "${0%/*}"/helperFuncs.sh
 source "${0%/*}"/mainFuncs.sh
@@ -94,10 +119,6 @@ parseparam "$@"
 # do initial configurations
 #
 source "${0%/*}"/init.sh
-
-# do some check
-#
-check
 
 # parse shell configurations
 #
@@ -123,23 +144,21 @@ if [[ ${CMD} =~ ${AVAILABLECMD} && ${CMD} != init ]]; then
       "${CONFIGS[${D_VARS_Z16[0]}]%/}"/"${INSTANCES[idx]}"/"${CONFIGS[${D_VARS_G[0]}]#/}" \
       D_VARS_L CONFIGS_${idx}"
     if [[ ${?} != 0 ]]; then
-      printlog "you may need to initialize instances \"${INSTANCES[idx]}\" first." warn
-      fatalerr "parse configurations of \"${INSTANCES[idx]}\" failed."
+      printlog "You may need to initialize instances \"${INSTANCES[idx]}\" first." warn
+      fatalerr "Parse configurations of \"${INSTANCES[idx]}\" failed."
     fi
   done
 fi
 set -e
+
+# do some check
+#
+check
+
 # exec main commands
 #
 execmain
 
-exit
-# test out
-#
 declare -p CONFIGS
-declare -p CONFIGS_0
-declare -p CONFIGS_1
-declare -p CONFIGS_2
-#set
 
 # vim: et:ts=2:sts:sw=2

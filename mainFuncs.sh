@@ -4,7 +4,7 @@
 # license: GPLv2
 #
 
-#Func: write to file
+#Func: write to file #TODO
 #      $1: contents <STRING>
 #      $2: file     <STRING>
 #return: $?
@@ -36,6 +36,16 @@ function _get_list() {
   echo -n "${ssraw}"
 }
 
+#Func: parse dot- prefix and return
+#      $1 item name
+function _parse_dot_prefix() {
+  if [[ "${1}" =~ ^(d|D)(o|O)(t|T)\- ]]; then
+    echo -n ".${1:4}"
+  else
+    echo -n "${1}"
+  fi
+}
+
 #Func: make symbolic link
 #      $1: instance dir <STRING>
 #      $2: config <ARRAY>
@@ -45,7 +55,7 @@ function mklink() {
   local p="${1}"
   eval "${2/declare/local}" # configuration array: c
   local ssraw
-  local -i j
+  local -i i
 
   PATH_STACK=( "${PATH_STACK[@]}" "${c[0]}" )
   local ldir="${Z16_TMPDIR%/}/${c[0]}"
@@ -57,14 +67,16 @@ function mklink() {
     printlog "Instance '${p##*/}' has no file, continue!" warn
     return
   fi
-  for (( j = 0; j < ${#ss[@]}; ++j )); do
-    ln -sn "${p%/}/${ss[j]}" "${ldir}/${ss[j]}" || ret+=$?
-    chown -R ${c[1]:-${CUSER}}:${c[2]:-${CGROUP}} "${ldir}/${ss[j]}" || ret+=$?
+  for (( i = 0; i < ${#ss[@]}; ++i )); do
+    local ldest
+    eval "ldest=\"${ldir}/\$(_parse_dot_prefix '${ss[i]}')\""
+    ln -sn "${p%/}/${ss[i]}" "${ldest}" || ret+=$?
+    chown -R ${c[1]}:${c[2]} "${ldest}" || ret+=$?
     #change the user & group of the source file
-    chown -R ${c[1]:-${CUSER}}:${c[2]:-${CGROUP}} "${p%/}/${ss[j]}" || ret+=$?
+    chown -R ${c[1]}:${c[2]} "${p%/}/${ss[i]}" || ret+=$?
   done
   if [[ ${ret} > 0 ]]; then
-    fatalerr "something errors when making symbolic links of '${p##*/}'!"
+    fatalerr "Error in making symbolic links of instance '${p##*/}'!"
   fi
 }
 
@@ -75,10 +87,6 @@ function merge() {
   local -i i
   for (( i = 0; i < ${#PATH_STACK[@]}; ++i )); do
     local path="${PATH_STACK[i]}"
-    if [[ ! -d "${path}" ]]; then
-      eval "mkdir -p \"${path}\""
-      printlog "Path '${path}' does not exist! Created by current user." warn
-    fi
     eval "ls -A1 \"${path#/}\"" | \
     while IFS= read -r item; do
       eval "lparent=\$(readlink -fn '${path#/}/${item}')"
@@ -88,7 +96,8 @@ function merge() {
             -L "${path}/${item}" && \
             $(readlink -fn "${path}/${item}") =~ ^${lparent} \
          ]]; then
-        eval "cp -af \"${path#/}/${item}\" \"${path}\""
+        eval "cp -af \"${path#/}/${item}\" \"${path}\"" || \
+          fatalerr "Merge error!"
       else
         printlog "Skip existing: '${path%/}/${item}'" warn
       fi
@@ -96,7 +105,7 @@ function merge() {
   done
   eval "popd 1>/dev/null 2>${VERBOSEOUT2}"
   printlog "** Merged!" stage
-  #_preptmp clean
+  _preptmp clean
 }
 
 #Func: remove symbolic link
@@ -113,8 +122,11 @@ function rmlink() {
 
   local -a links
   for (( i = 0; i < ${#ss[@]}; ++i )); do
-    if [[ -L "${c[0]}/${ss[i]}" ]]; then
-      links=( "${links[@]}" "${c[0]}/${ss[i]}" )
+    local dest
+    eval "dest=\"${c[0]}/\$(_parse_dot_prefix '${ss[i]}')\""
+    echo ${dest}
+    if [[ -L "${dest}" ]]; then
+      links=( "${links[@]}" "${dest}" )
     fi
   done
 
@@ -131,26 +143,33 @@ function rmlink() {
 #      $1: instance name(s)
 #return: $?
 function init() {
+  local -a insts
   for inst; do
     local cpath
     eval "cpath=\"\${CONFIGS[${D_VARS_Z16[0]}]%/}/${inst%/}/\${CONFIGS[${D_VARS_G[0]}]}\""
-    eval "mkdir -p \"\${CONFIGS[${D_VARS_Z16[0]}]%/}/${inst}\""
-    if [[ ! -e "${cpath}" ]]; then
+    if [[ -e "${cpath}" ]]; then
+      #TODO: check file type
+      continue
+    else
+      eval "mkdir -p \"\${CONFIGS[${D_VARS_Z16[0]}]%/}/${inst}\""
       eval "touch \"\${cpath}\""
-      eval "INIT_VARS[${D_VARS_L[0]}_C]='The parent folder path of the instance'"
-      eval "INIT_VARS[${D_VARS_L[0]}]=\${D_${D_VARS_L[0]}}"
-      eval "INIT_VARS[${D_VARS_L[1]}_C]='The owner of the symbolic links'"
-      eval "INIT_VARS[${D_VARS_L[1]}]=\${D_${D_VARS_L[1]}}"
-      eval "INIT_VARS[${D_VARS_L[2]}_C]='The group of the symbolic links'"
-      eval "INIT_VARS[${D_VARS_L[2]}]=\${D_${D_VARS_L[2]}}"
-      _init_writevar D_VARS_L ${#D_VARS_L[@]} "${cpath}" "This is the local configuration file of instance." mask
+      insts=( "${insts[@]}" "${inst}" )
     fi
-    #TODO
+    #TODO: more detailed configurations.
   done
+  if [[ ${#insts[@]} > 0 ]]; then
+    local inststr i
+    for (( i = 0; i < ${#insts[@]}; ++i )); do
+      inststr="${inststr}, '${insts[i]}'"
+    done
+    printlog "== ${inststr#, } initialized." stage
+  else
+    printlog "Nothing needs to be initialized!" warn
+  fi
 }
 
 #Func: list instance
-#    [$1]: instance name(s) #TODO
+#    [$1]: instance name(s) #TODO: more details and show configurations
 #return: $?
 function list() {
   local -a lists
@@ -182,19 +201,13 @@ function load() {
     for (( j = 0; j < cc; ++j )); do
       eval "c[j]=\${CONFIGS_${i}[${D_VARS_L[j]}]:-${CONFIGS[${D_VARS_L[j]}]}}"
     done
-    if [[ "${c[0]}" =~ ^~ ]]; then
-      local homedir
-      eval "homedir=\$(echo -n ~${c[1]:-${CUSER}})"
-      c[0]=${c[0]/\~/${homedir}}
-    fi
-    if [[ ! "${c[0]}" =~ ^/ ]]; then
-      fatalerr "Relative path '${c[0]}' detected, please use absolute path!"
-    fi
-    c[0]="${c[0]%/}"
 
     #do action
     if [[ ${act} == load ]]; then
       printlog ">>> preloading instance \"${inst}\"..."
+      printlog "--- the parent dir has been set to '${c[0]}'"
+      printlog "--- the owner has been set to uid: ${c[1]}"
+      printlog "--- the group has been set to gid: ${c[2]}"
       #make symbolic links
       mklink "${CONFIGS[${D_VARS_Z16[0]}]%/}/${inst}" "$(declare -p c)"
       printlog "*** instance \"${inst}\" preloaded."
@@ -206,16 +219,17 @@ function load() {
     i+=1
   done
   if [[ ${act} == load ]]; then
+    printlog "** Instance$([[ $# == 1 ]] || echo -n s) preloaded." stage
     merge
   fi
   printlog "== Instance$([[ $# == 1 ]] || echo -n s) ${act}ed!" stage
 }
 
-#Func: config instance
+#Func: config instance #TODO
 #      $1: instance name(s)
 #return: $?
 function config() {
-  :
+  printlog "Nothing here!" warn
 }
 
 #Func: do main function

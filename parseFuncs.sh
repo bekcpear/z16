@@ -17,7 +17,8 @@ function parseconfigs() {
     [[ -d ${1%/*} ]] || ret+=$?
     local val
     eval "val=\$(grep -Ei '^[[:space:]]*${opt}[[:space:]]*=' '${1}' 2>${VERBOSEOUT2}) || true"
-    eval "val=\$(echo '${val}' | awk -F'=[[:space:]]*' '{printf \$2}') || ret+=\$?"
+    eval "val=\$(echo '${val}' | { IFS='='; read -r _ v; echo -n \"\${v}\"; }) || ret+=\$?"
+    val=${val##[[:space:]]}
     if [[ "${val}" =~ ^\"([^\"]*)\"|^\'([^\']*)\'|^\`([^\`]*)\` ]]; then
       val="${BASH_REMATCH[1]:-${val}}"
       val="${BASH_REMATCH[2]:-${val}}"

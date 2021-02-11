@@ -4,6 +4,10 @@
 # license: GPLv2
 #
 
+if [[ -e "${CONFPATH}" ]]; then
+  return
+fi
+
 declare -A INIT_VARS
 
 #Func: customize variables
@@ -16,7 +20,7 @@ function _init_customizevar() {
 \e[2m(default: \${INIT_VARS[\${${1}[idx]}]})\e[0m\""
     echo -en "       \e[2m<leave empty to use default>\e[0m\e[G"
     echo -en "\e[2m|\e[0m"
-    read -ep ' to: ' INIT_TMP
+    read -rep ' to: ' INIT_TMP
     if [[ ${INIT_TMP//[[:space:]]/} != '' ]]; then
       eval "INIT_VARS[\${${1}[idx]}]='${INIT_TMP}'"
     fi
@@ -28,11 +32,7 @@ function _init_customizevar() {
 #      $2 the count of variable elements
 #      $3 the path of the configuration file
 #      $4 the description of the file
-#      $5 mask variable or not
 function _init_writevar() {
-  if [[ ${5} == "mask" ]]; then
-    local mask='#'
-  fi
   eval "echo \"# ${4}
 #
 \" > '${3}'"
@@ -41,12 +41,9 @@ function _init_writevar() {
     eval "echo \"${mask}\${${1}[idx]} = \${INIT_VARS[\${${1}[idx]}]}\" >> '${3}'"
     eval "echo \"\" >> '${3}'"
   done
-  printlog "** Configurations have been written to '${3}'" stage
+  printlog "** Have been written to '${3}'" stage
 }
 
-if [[ -e "${CONFPATH}" ]]; then
-  return
-fi
 # make z16rc
 #
 eval "INIT_VARS[${D_VARS_Z16[0]}_C]='The directory to store instances'"
