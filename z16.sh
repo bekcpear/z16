@@ -111,9 +111,13 @@ done
 CGROUPS="${CGROUPS#|}"
 unset CGROUPS_A CGROUPTMP
 
-source "${0%/*}"/parseFuncs.sh
-source "${0%/*}"/helperFuncs.sh
-source "${0%/*}"/mainFuncs.sh
+SPATH="${0}"
+if [[ -L "${SPATH}" ]]; then
+  eval "SPATH=\$(readlink '${SPATH}')"
+fi
+source "${SPATH%/*}"/parseFuncs.sh
+source "${SPATH%/*}"/helperFuncs.sh
+source "${SPATH%/*}"/mainFuncs.sh
 
 # parse shell parameters
 #
@@ -121,7 +125,7 @@ parseparam "$@"
 
 # do initialize configurations
 #
-source "${0%/*}"/init.sh
+source "${SPATH%/*}"/init.sh
 
 # parse shell configurations
 #
