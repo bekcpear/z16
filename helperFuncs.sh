@@ -7,7 +7,21 @@
 #Func: show help informations
 #retrun: $?
 function showhelp() {
-  echo "===help msg==="
+  echo "
+Usage: z16 [<options>] <command> [(<instance>)]
+
+options:
+  --config=<path>, -c   Use this configuration file instead of the default ~/.config/z16rc.
+  --force, -f           Force override the destination.
+  --verbose, -v         Show more informations.
+
+commands:
+  init   (<instance>)   Initial instance(s).
+  load   (<instance>)   Create symbolic links to files of the instance(s).
+  unload (<instance>)   Remove symbolic links belonging to the instance(s).
+  list                  List all instances.
+  help                  Show this help message.
+"
 }
 
 #Func: print log
@@ -55,6 +69,38 @@ function fatalerr() {
   exit 1
 }
 
+#Func: replace prefix ~ to absolute path
+#      $1: path
+#    [$2]: optional username
+#return: absolute path
+function _absolutepath() {
+  local p="${1}"
+  local u="${2}"
+  if [[ "${p}" =~ ^~ ]]; then
+    local homedir
+    eval "homedir=\"\$(echo -n ~${u})\""
+    p="${homedir%/}${p:1}"
+  fi
+  echo -n "${p}"
+}
+
+#Func: fatal relative path
+#      $1: path
+function _fatalrelativepath() {
+  if [[ ! "${1}" =~ ^/ ]]; then
+    fatalerr "Relative path '${1}' detected, please use absolute path!"
+  fi
+}
+
+#Func: return username fron userid
+#      $1: userid
+#return: username
+function _getuname() {
+  local u
+  eval "u=\$(getent passwd ${1} | { IFS=':'; read un _; echo -n \${un:-erroruser}; })"
+  echo -n "${u}"
+}
+
 #Func: check path, service for check()
 #      $1: path
 #      $2: user
@@ -72,16 +118,10 @@ function _checkpath() {
   fi
 
   if [[ "${u}" =~ ^[[:digit:]]+$ ]]; then
-    eval "u=\$(getent passwd ${u} | { IFS=':'; read un _; echo -n \${un}; })"
+    eval "u=\$(_getuname ${u})"
   fi
-  if [[ "${p}" =~ ^~ ]]; then
-    local homedir
-    eval "homedir=\$(echo -n ~${u})"
-    p="${p/\~/${homedir}}"
-  fi
-  if [[ ! "${p}" =~ ^/ ]]; then
-    fatalerr "Relative path '${p}' detected, please use absolute path!"
-  fi
+  eval "p=\$(_absolutepath '${p}' '${u}')"
+  _fatalrelativepath "${p}"
   if [[ ! -d "${p}" ]]; then
     eval "local -r d_tmpdir=\"\${D_${D_VARS_G[1]}}\""
     if [[ "${p}" == "${d_tmpdir}" ]]; then
@@ -149,7 +189,7 @@ function check() {
   done
 
   #check user and groups
-  if [[ "${CUSERN}" == root ]]; then
+  if [[ "${CUSER}" == 0 ]]; then
     return
   fi
   local -a otherusers othergroups

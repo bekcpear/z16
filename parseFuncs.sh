@@ -10,13 +10,18 @@
 #      $3 <IDENTIFIER> (array: pass values to it)
 #return: $?
 function parseconfigs() {
+  local p="${1}"
   local -i ret=0
   shopt -s extglob
   eval "local opts=(\${${2}[@]})"
+  eval "p=\$(_absolutepath '${p}')"
   for opt in ${opts[@]}; do
-    [[ -d ${1%/*} ]] || ret+=$?
+    if [[ ! -d ${p%/*} ]]; then
+      printlog "Directory '${1%/*}' does not exist." warn
+      ret+=1
+    fi
     local val
-    eval "val=\$(grep -Ei '^[[:space:]]*${opt}[[:space:]]*=' '${1}' 2>${VERBOSEOUT2}) || true"
+    eval "val=\$(grep -Ei '^[[:space:]]*${opt}[[:space:]]*=' '${p}' 2>${VERBOSEOUT2}) || true"
     eval "val=\$(echo '${val}' | { IFS='='; read -r _ v; echo -n \"\${v}\"; }) || ret+=\$?"
     val=${val##[[:space:]]}
     if [[ "${val}" =~ ^\"([^\"]*)\"|^\'([^\']*)\'|^\`([^\`]*)\` ]]; then
@@ -42,7 +47,7 @@ function parseparam() {
     fatalerr "The command 'getopt' of Linux version is necessory to parse parameters."
   fi
   local args
-  args=$(getopt -o 'vc:' -l 'verbose,config:' -n 'z16' -- "$@")
+  args=$(getopt -o 'fvc:' -l 'force,verbose,config:' -n 'z16' -- "$@")
   if [[ ${?} != 0 ]]; then
     showhelp
     exit 1
@@ -51,6 +56,10 @@ function parseparam() {
   eval "set -- ${args}"
   while true; do
     case "${1}" in
+      -f|--force)
+        FORCEOVERRIDE=1
+        shift
+        ;;
       -v|--verbose)
         VERBOSEOUT1='&1'
         VERBOSEOUT2='&2'

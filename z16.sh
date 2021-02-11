@@ -31,9 +31,9 @@
 #  `-- getent
 
 # paramaters:
-#              actions: init|load|unload|config|help
+#             commands: init|load|unload|config|help
 #     optional options: --/-OPT VALUE !!!TODO
-#   necessary argument: (<INSTANCE NAME>)
+#             argument: [(<INSTANCE NAME>)]
 
 # file structure:
 #   <MAIN-FOLDER>
@@ -49,12 +49,13 @@
 
 # about configiguration file, .z16.l.conf:
 #  #parent folder path for the symbolic link
-#   parent: <path> (default to /tmp/z16.tmp.d for safety)
+#   parentdir: <path> (default to /tmp/z16.tmp.d for safety)
 #  #the owner of the link and its dereference file
-#   owner: <username>
+#        user: <username>
 #  #the group of the link and its dereference file
-#   group: <groupname>
+#       group: <groupname>
 #
+# TODO: database of loaded instances
 # TODO: about SUID/SGID
 # TODO: SELinux support
 #
@@ -73,8 +74,10 @@ CMD='help'
 #READONLY VARIABLE
 declare -r Z16_TMPDIR='/tmp/.z16_tmpdir_de82969a-064c-43d7-b761-6061eb1669f8'
 #DEFAULT VARIABLES THAT CAN ONLY BE MODIFIED BY COMMAND LINE OPTION
+FORCEOVERRIDE=0
 VERBOSEOUT1=/dev/null
 VERBOSEOUT2=/dev/null
+declare -r SYSCONFPATH="/etc/z16/z16rc"
 CONFPATH="${HOME%/}/.config/z16rc"
 #DEFAULT VARIABLES
 D_VARS_Z16=(
@@ -122,19 +125,35 @@ source "${0%/*}"/init.sh
 
 # parse shell configurations
 #
-parseconfigs "${CONFPATH}" D_VARS_Z16 CONFIGS
-for (( idx = 0; idx < ${#D_VARS_Z16[@]}; ++idx )); do
-  eval "CONFIGS[${D_VARS_Z16[idx]}]=\${CONFIGS[${D_VARS_Z16[idx]}]:=\${D_${D_VARS_Z16[idx]}}}"
-done
+function _mkvarnotempty() {
+  local -i idx
+  for (( idx = 0; idx < ${#D_VARS_Z16[@]}; ++idx )); do
+    eval "CONFIGS[${D_VARS_Z16[idx]}]=\${CONFIGS[${D_VARS_Z16[idx]}]:-\${D_${D_VARS_Z16[idx]}}}"
+  done
+}
+if [[ -e "${SYSCONFPATH}" ]]; then
+  parseconfigs "${SYSCONFPATH}" D_VARS_Z16 CONFIGS
+  _mkvarnotempty
+fi
+if [[ -e "${CONFPATH}" ]]; then
+  parseconfigs "${CONFPATH}" D_VARS_Z16 CONFIGS
+  _mkvarnotempty
+fi
+eval "CONFIGS[${D_VARS_Z16[0]}]=\$(_absolutepath '${CONFIGS[${D_VARS_Z16[0]}]}')"
+_fatalrelativepath "${CONFIGS[${D_VARS_Z16[0]}]}"
 
+set +e
 # parse instance global configurations
 #
 parseconfigs "${CONFIGS[${D_VARS_Z16[0]}]%/}/${CONFIGS[${D_VARS_Z16[1]}]#/}" D_VARS_G CONFIGS
+if [[ ${?} != 0 ]]; then
+  printlog "You may not configure correctly." warn
+  fatalerr "Parse global configurations failed!"
+fi
 for (( idx = 0; idx < ${#D_VARS_G[@]}; ++idx )); do
-  eval "CONFIGS[${D_VARS_G[idx]}]=\${CONFIGS[${D_VARS_G[idx]}]:=\${D_${D_VARS_G[idx]}}}"
+  eval "CONFIGS[${D_VARS_G[idx]}]=\${CONFIGS[${D_VARS_G[idx]}]:-\${D_${D_VARS_G[idx]}}}"
 done
 
-set +e
 if [[ ${CMD} =~ ${AVAILABLECMD} && ${CMD} != init ]]; then
   # parse instance local configurations
   #
@@ -151,14 +170,8 @@ if [[ ${CMD} =~ ${AVAILABLECMD} && ${CMD} != init ]]; then
 fi
 set -e
 
-# do some check
-#
-check
-
 # exec main commands
 #
 execmain
-
-declare -p CONFIGS
 
 # vim: et:ts=2:sts:sw=2

@@ -4,7 +4,7 @@
 # license: GPLv2
 #
 
-if [[ -e "${CONFPATH}" ]]; then
+if [[ -e "${CONFPATH}" || -e "${SYSCONFPATH}" ]]; then
   return
 fi
 
@@ -33,15 +33,17 @@ function _init_customizevar() {
 #      $3 the path of the configuration file
 #      $4 the description of the file
 function _init_writevar() {
+  local p="${3}"
+  [[ -e "${p%/*}" ]] || mkdir -p "${p%/*}"
   eval "echo \"# ${4}
 #
-\" > '${3}'"
+\" > '${p}'"
   for (( idx = 0; idx < ${2}; ++idx )); do
-    eval "echo \"# \${INIT_VARS[\${${1}[idx]}_C]}\" >> '${3}'"
-    eval "echo \"${mask}\${${1}[idx]} = \${INIT_VARS[\${${1}[idx]}]}\" >> '${3}'"
-    eval "echo \"\" >> '${3}'"
+    eval "echo \"# \${INIT_VARS[\${${1}[idx]}_C]}\" >> '${p}'"
+    eval "echo \"${mask}\${${1}[idx]} = \${INIT_VARS[\${${1}[idx]}]}\" >> '${p}'"
+    eval "echo \"\" >> '${p}'"
   done
-  printlog "** Have been written to '${3}'" stage
+  printlog "** Have been written to '${p}'" stage
 }
 
 # make z16rc
@@ -75,6 +77,7 @@ eval "INIT_VARS[${D_VARS_G[3]}_C]='The group of the symbolic links'"
 eval "INIT_VARS[${D_VARS_G[3]}]=\${D_${D_VARS_G[3]}}"
 _init_customizevar D_VARS_G ${#D_VARS_G[@]}
 eval "GOLCONFPATH=\"\${INIT_VARS[${D_VARS_Z16[0]}]%/}/\${INIT_VARS[${D_VARS_Z16[1]}]}\""
+eval "GOLCONFPATH=\$(_absolutepath '${GOLCONFPATH}')"
 _init_writevar D_VARS_G ${#D_VARS_G[@]} "${GOLCONFPATH}" "This is the golbal configuration file of instances."
 
 echo "== Initialized."

@@ -91,7 +91,8 @@ function merge() {
     while IFS= read -r item; do
       eval "lparent=\$(readlink -fn '${path#/}/${item}')"
       lparent="${lparent%/*}"
-      if [[ ! -e "${path}/${item}" ]] || \
+      if [[ ${FORCEOVERRIDE} == 1 ]] || \
+         [[ ! -e "${path}/${item}" ]] || \
          [[ \
             -L "${path}/${item}" && \
             $(readlink -fn "${path}/${item}") =~ ^${lparent} \
@@ -124,7 +125,6 @@ function rmlink() {
   for (( i = 0; i < ${#ss[@]}; ++i )); do
     local dest
     eval "dest=\"${c[0]}/\$(_parse_dot_prefix '${ss[i]}')\""
-    echo ${dest}
     if [[ -L "${dest}" ]]; then
       links=( "${links[@]}" "${dest}" )
     fi
@@ -132,7 +132,7 @@ function rmlink() {
 
   if [[ ${#links[@]} > 0 ]]; then
     for (( i = 0; i < ${#links[@]}; ++i )); do
-      unlink "${links[i]}"
+      eval "unlink '${links[i]}'"
     done
   else
     printlog "Instance '${p##*/}' already unloaded!" warn
@@ -151,9 +151,19 @@ function init() {
       #TODO: check file type
       continue
     else
-      eval "mkdir -p \"\${CONFIGS[${D_VARS_Z16[0]}]%/}/${inst}\""
-      eval "touch \"\${cpath}\""
+      set +e
+      local -i ret=0
+      mkdir -p "${cpath%/*}" || ret+=$?
+      touch "${cpath}" || ret+=$?
+      local varname
+      for varname in "${D_VARS_L[@]}"; do
+        echo "# ${varname} =" >> "${cpath}" || ret+=$?
+      done
       insts=( "${insts[@]}" "${inst}" )
+      set -e
+      if [[ ${ret} > 0 ]]; then
+        fatalerr "Initial instance '${inst}' failed!"
+      fi
     fi
     #TODO: more detailed configurations.
   done
@@ -162,7 +172,7 @@ function init() {
     for (( i = 0; i < ${#insts[@]}; ++i )); do
       inststr="${inststr}, '${insts[i]}'"
     done
-    printlog "== ${inststr#, } initialized." stage
+    printlog "== Instance: ${inststr#, } initialized." stage
   else
     printlog "Nothing needs to be initialized!" warn
   fi
@@ -240,12 +250,15 @@ function execmain() {
       init ${INSTANCES[@]}
       ;;
     load)
+      check
       load load ${INSTANCES[@]}
       ;;
     unload)
+      check
       load unload ${INSTANCES[@]}
       ;;
     config)
+      check
       config ${INSTANCES[@]}
       ;;
     list)
