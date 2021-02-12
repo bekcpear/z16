@@ -5,7 +5,6 @@
 #
 
 #Func: show help informations
-#retrun: $?
 function showhelp() {
   echo "
 Usage: z16 [<options>] <command> [(<instance>)]

@@ -97,7 +97,9 @@ function merge() {
             -L "${path}/${item}" && \
             $(readlink -fn "${path}/${item}") =~ ^${lparent} \
          ]]; then
-        eval "cp -af \"${path#/}/${item}\" \"${path}\"" || \
+        [[ ! -d "${path}/${item}" ]] || \
+          rm -rf "${path}/${item}" && \
+          eval "cp -af \"${path#/}/${item}\" \"${path}/\"" || \
           fatalerr "Merge error!"
       else
         printlog "Skip existing: '${path%/}/${item}'" warn
