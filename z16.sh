@@ -55,6 +55,7 @@
 #  #the group of the link and its dereference file
 #       group: <groupname>
 #
+# TODO: rename instance
 # TODO: database of loaded instances
 # TODO: about SUID/SGID
 # TODO: SELinux support

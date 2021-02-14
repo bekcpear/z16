@@ -86,6 +86,8 @@ The project name is **整** (Unicode: U+6574; pinyin: zhěng). The number of it'
    z16 unload <configured-instance> [<more-configured-instances>...]
    ```
 
+* At present, if you want rename instances, please do `--force load` after the instance directory has been renamed.
+
 ## How to configure
 
 z16 has several configuration files:
