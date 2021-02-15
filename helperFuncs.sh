@@ -75,11 +75,14 @@ function fatalerr() {
 #return: absolute path
 function _absolutepath() {
   local p="${1}"
-  local u="${2}"
   if [[ "${p}" =~ ^~ ]]; then
-    local homedir
-    eval "homedir=\"\$(echo -n ~${u})\""
-    p="${homedir%/}${p:1}"
+    local h="${p%%/*}"
+    local r="${p:${#h}}"
+    local u=${h:1}
+    u=${u:-${2}}
+    [[ ! "${u}" =~ [[:space:]] ]] || fatalerr "Unsupported username!"
+    eval "h=\"\$(echo -n ~${u})\""
+    p="${h}${r}"
   fi
   echo -n "${p}"
 }

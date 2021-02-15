@@ -56,6 +56,7 @@
 #       group: <groupname>
 #
 # TODO: rename instance
+# TODO: generate instances through a path list file and restore
 # TODO: database of loaded instances
 # TODO: about SUID/SGID
 # TODO: SELinux support
