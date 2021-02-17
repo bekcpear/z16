@@ -71,6 +71,7 @@ AVAILABLECMD_NOARGS="list|help"
 declare -a INSTANCES
 declare -a PATH_STACK
 declare -A CONFIGS
+declare -a IGNORES
 CMD='help'
 
 #READONLY VARIABLE
@@ -92,6 +93,7 @@ D_VARS_L=(
   PARENTDIR
   USER
   GROUP
+  IGNORE
 )
 D_VARS_G=(
   INSTLOCALCONFNAME
@@ -101,6 +103,7 @@ eval "D_${D_VARS_G[0]}='.z16.l.conf'"
 eval "D_${D_VARS_G[1]}='/tmp/z16.tmp.d'"
 eval "D_${D_VARS_G[2]}=''"
 eval "D_${D_VARS_G[3]}=''"
+eval "D_${D_VARS_G[4]}=''"
 
 #current user and groups
 CUSER=$(id -u)
@@ -138,11 +141,11 @@ function _mkvarnotempty() {
   done
 }
 if [[ -e "${SYSCONFPATH}" ]]; then
-  parseconfigs "${SYSCONFPATH}" D_VARS_Z16 CONFIGS
+  parseconfigs "${SYSCONFPATH}" D_VARS_Z16 _ CONFIGS
   _mkvarnotempty
 fi
 if [[ -e "${CONFPATH}" ]]; then
-  parseconfigs "${CONFPATH}" D_VARS_Z16 CONFIGS
+  parseconfigs "${CONFPATH}" D_VARS_Z16 _ CONFIGS
   _mkvarnotempty
 fi
 eval "CONFIGS[${D_VARS_Z16[0]}]=\$(_absolutepath '${CONFIGS[${D_VARS_Z16[0]}]}')"
@@ -151,7 +154,7 @@ _fatalrelativepath "${CONFIGS[${D_VARS_Z16[0]}]}"
 set +e
 # parse instance global configurations
 #
-parseconfigs "${CONFIGS[${D_VARS_Z16[0]}]%/}/${CONFIGS[${D_VARS_Z16[1]}]#/}" D_VARS_G CONFIGS
+parseconfigs "${CONFIGS[${D_VARS_Z16[0]}]%/}/${CONFIGS[${D_VARS_Z16[1]}]#/}" D_VARS_G IGNORES CONFIGS
 if [[ ${?} != 0 ]]; then
   printlog "You may not configure correctly." warn
   fatalerr "Parse global configurations failed!"
@@ -165,9 +168,10 @@ if [[ ${CMD} =~ ${AVAILABLECMD} && ${CMD} != init ]]; then
   #
   for (( idx = 0; idx < ${#INSTANCES[@]}; ++idx )); do
     eval "declare -A CONFIGS_${idx}"
+    eval "declare -a IGNORES_${idx}"
     eval "parseconfigs \
       "${CONFIGS[${D_VARS_Z16[0]}]%/}"/"${INSTANCES[idx]}"/"${CONFIGS[${D_VARS_G[0]}]#/}" \
-      D_VARS_L CONFIGS_${idx}"
+      D_VARS_L IGNORES_${idx} CONFIGS_${idx}"
     if [[ ${?} != 0 ]]; then
       printlog "You may need to initialize instances \"${INSTANCES[idx]}\" first." warn
       fatalerr "Parse configurations of \"${INSTANCES[idx]}\" failed."

@@ -12,3 +12,8 @@ USER =
 
 # The group of the symbolic links
 GROUP =
+
+# Ignored file patterns which are seperated by commas,
+# every pattern is a POSIX extended regular expression
+IGNORE =
+

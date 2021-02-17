@@ -10,8 +10,7 @@ function showhelp() {
 Usage: z16 [<options>] <command> [(<instance>)]
 
 options:
-  --config=<path>, -c   Use this user-level configuration file instead of
-                                           the default ~/.config/z16/z16rc.
+  --config=<path>, -c   Use this user-level configuration file instead of the default ~/.config/z16/z16rc.
   --force, -f           Force override the destination.
   --verbose, -v         Show more informations.
 

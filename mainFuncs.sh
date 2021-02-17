@@ -23,11 +23,30 @@ function _preptmp() {
 
 #Func: get the list array under a path
 #      $1 path
+#      $2 instance index
 function _get_list() {
-  local ssraw
+  local ssraw m igno append
   local -i i=0
+  eval "local -a mi=( \"\${IGNORES_${2}[@]}\" )"
+  for igno in "${IGNORES[@]}" "${mi[@]}"; do
+    append=1
+    if [[ "${igno}" =~ ^! ]]; then
+      append=0
+      igno="${igno#!}"
+    fi
+    igno="${igno/#\?/\\?}"
+    igno="${igno/#\+/\\+}"
+    igno="${igno/#\*/\\*}"
+    igno="${igno/\{/\\\{}"
+    if [[ "${append}" == 0 ]]; then
+      m="${m//${igno}|}"
+    else
+      m+="${igno}|"
+    fi
+  done
+  m="^(${m}${CONFIGS[${D_VARS_G[0]}]})$"
   ssraw="local -a ss=($(eval "ls -A1 ${1}" | while read -r source; do
-    if [[ "${source}" =~ ^${CONFIGS[${D_VARS_G[0]}]}$ ]]; then
+    if [[ "${source}" =~ ${m} ]]; then
       continue
     fi
     eval "echo -n '[${i}]=\"${source}\" '"
@@ -49,7 +68,7 @@ function _parse_dot_prefix() {
 #Func: make symbolic link
 #      $1: instance dir <STRING>
 #      $2: config <ARRAY>
-#retrun: $?
+#      $3: instance index
 function mklink() {
   local -i ret=0
   local p="${1}"
@@ -60,7 +79,7 @@ function mklink() {
   PATH_STACK=( "${PATH_STACK[@]}" "${c[0]}" )
   local ldir="${Z16_TMPDIR%/}/${c[0]}"
   [[ -d ${ldir} ]] || mkdir -p "${ldir}"
-  eval "ssraw=\"\$(_get_list '${p}')\""
+  eval "ssraw=\"\$(_get_list '${p}' ${3})\""
   eval "${ssraw}"
 
   if [[ ${#ss[@]} == 0 ]]; then
@@ -114,13 +133,14 @@ function merge() {
 #Func: remove symbolic link
 #      $1: instance dir <STRING>
 #      $2: config <ARRAY>
+#      $3: instance index
 function rmlink() {
   local -i ret=0
   local -i i
   eval "${2/declare/local}" # configuration array: c
   local p="${1}"
   local ssraw
-  eval "ssraw=\"\$(_get_list '${p}')\""
+  eval "ssraw=\"\$(_get_list '${p}' ${3})\""
   eval "${ssraw}"
 
   local -a links
@@ -221,11 +241,11 @@ function load() {
       printlog "--- the owner has been set to uid: ${c[1]}"
       printlog "--- the group has been set to gid: ${c[2]}"
       #make symbolic links
-      mklink "${CONFIGS[${D_VARS_Z16[0]}]%/}/${inst}" "$(declare -p c)"
+      mklink "${CONFIGS[${D_VARS_Z16[0]}]%/}/${inst}" "$(declare -p c)" ${i}
       printlog "*** instance \"${inst}\" preloaded."
     else
       printlog ">>> unloading instance \"${inst}\"..."
-      rmlink "${CONFIGS[${D_VARS_Z16[0]}]%/}/${inst}" "$(declare -p c)"
+      rmlink "${CONFIGS[${D_VARS_Z16[0]}]%/}/${inst}" "$(declare -p c)" ${i}
       printlog "*** instance \"${inst}\" unloaded."
     fi
     i+=1
@@ -241,7 +261,14 @@ function load() {
 #      $1: instance name(s)
 #return: $?
 function config() {
-  printlog "Nothing here!" warn
+  printlog "Now only show configurations!" warn
+  declare -p CONFIGS
+  declare -p IGNORES
+  local -i i
+  for (( i = 0; i < ${#INSTANCES[@]}; ++i )); do
+    eval "declare -p CONFIGS_${i}"
+    eval "declare -p IGNORES_${i}"
+  done
 }
 
 #Func: do main function

@@ -15,7 +15,10 @@ declare -A INIT_VARS
 #      $2 the count of variable elements
 function _init_customizevar() {
   for (( idx = 0; idx < ${2}; ++idx )); do
-    eval "echo -e \"\e[2m| # \${INIT_VARS[\${${1}[idx]}_C]}\e[0m\""
+    eval "echo \"\${INIT_VARS[\${${1}[idx]}_C]}\"" | \
+    while read -r comment; do
+      echo -e "\e[2m| # ${comment}\e[0m"
+    done
     eval "echo -e \"\e[2m|\e[0m set \e[96m\e[1m\${${1}[idx]}\e[0m \
 \e[2m(default: \${INIT_VARS[\${${1}[idx]}]})\e[0m\""
     echo -en "       \e[2m<leave empty to use default>\e[0m\e[G"
@@ -39,8 +42,12 @@ function _init_writevar() {
 #
 \" > '${p}'"
   for (( idx = 0; idx < ${2}; ++idx )); do
-    eval "echo \"# \${INIT_VARS[\${${1}[idx]}_C]}\" >> '${p}'"
-    eval "echo \"${mask}\${${1}[idx]} = \${INIT_VARS[\${${1}[idx]}]}\" >> '${p}'"
+    eval "echo \"\${INIT_VARS[\${${1}[idx]}_C]}\"" | \
+    while read -r comment; do
+      echo "# ${comment}" >> "${p}"
+    done
+    eval "echo \"${mask}\${${1}[idx]} =\
+\${INIT_VARS[\${${1}[idx]}]:+ }\${INIT_VARS[\${${1}[idx]}]}\" >> '${p}'"
     eval "echo \"\" >> '${p}'"
   done
   printlog "** Have been written to '${p}'" stage
@@ -67,6 +74,9 @@ eval "INIT_VARS[${D_VARS_G[2]}_C]='The owner of the symbolic links'"
 eval "INIT_VARS[${D_VARS_G[2]}]=\${D_${D_VARS_G[2]}}"
 eval "INIT_VARS[${D_VARS_G[3]}_C]='The group of the symbolic links'"
 eval "INIT_VARS[${D_VARS_G[3]}]=\${D_${D_VARS_G[3]}}"
+eval "INIT_VARS[${D_VARS_G[4]}_C]='Ignored file patterns which are seperated by commas,
+every pattern is a POSIX extended regular expression'"
+eval "INIT_VARS[${D_VARS_G[4]}]=\${D_${D_VARS_G[4]}}"
 _init_customizevar D_VARS_G ${#D_VARS_G[@]}
 eval "GOLCONFPATH=\"\${INIT_VARS[${D_VARS_Z16[0]}]%/}/\${INIT_VARS[${D_VARS_Z16[1]}]}\""
 eval "GOLCONFPATH=\$(_absolutepath '${GOLCONFPATH}')"

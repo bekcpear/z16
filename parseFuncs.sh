@@ -7,7 +7,8 @@
 #Func: read file and parse configurations
 #      $1 <PATH>
 #      $2 <IDENTIFIER> (array: parameters)
-#      $3 <IDENTIFIER> (array: pass values to it)
+#      $3 <IDENTIFIER> (array: ignored list)
+#      $4 <IDENTIFIER> (array: pass values to it)
 #return: $?
 function parseconfigs() {
   local p="${1}"
@@ -31,7 +32,26 @@ function parseconfigs() {
     else
       val="${val%%+([[:space:]])#*}"
     fi
-    eval "${3}['${opt}']='${val}'"
+    if [[ "${opt}" == IGNORE ]]; then
+      #parse ignore patterns
+      if [[ -n ${val} ]]; then
+        local ignoexe
+        local -i nn=0
+        val="${val//\\/\\\\}"
+        val="${val//\\,/Z16CoMmA-f09448b9-96c6-4f09-8b6f-bb7d5c251943}"
+        val="${val//,/\\n}"
+        val="${val//Z16CoMmA-f09448b9-96c6-4f09-8b6f-bb7d5c251943/\\,}"
+        eval "ignoexe=\$(echo \"\${val@E}\" | \
+        while read -r n; do
+          ${3}[\${nn}]=\"\${n}\"
+          (( ++nn ))
+          declare -p ${3}
+        done)"
+        eval "${ignoexe##*declare -a }"
+      fi
+    else
+      eval "${4}['${opt}']='${val}'"
+    fi
   done
   shopt -u extglob
   return ${ret}
@@ -92,7 +112,7 @@ function parseparam() {
     fatalerr "Action '${CMD}' needs more arguments!" True
   fi
   if [[ ${CMD} =~ ${AVAILABLECMD_NOARGS} && ${#} > 0 ]]; then
-    eval "printlog 'arguments \"${@}\" ignored' warn"
+    eval "printlog 'args: \"${@}\" ignored' warn"
     return
   fi
   for arg; do
