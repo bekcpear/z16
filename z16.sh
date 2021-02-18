@@ -18,7 +18,6 @@
 #  |-- readlink (GNU version)
 #  |-- rm
 #  |-- touch
-#  |-- tr
 #  `-- unlink
 #
 #  * sys-apps/grep
@@ -58,6 +57,7 @@
 # TODO: rename instance
 # TODO: generate instances through a path list file and restore
 # TODO: database of loaded instances
+# TODO: link files iteratively
 # TODO: about SUID/SGID
 # TODO: SELinux support
 #

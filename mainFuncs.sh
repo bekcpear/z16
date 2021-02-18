@@ -111,11 +111,19 @@ function mklink() {
 function merge() {
   printlog ">> Merging to filesystem..." stage
   eval "pushd '${Z16_TMPDIR}' 1>/dev/null 2>${VERBOSEOUT2}"
+  local histpath=
   local -i i
   for (( i = 0; i < ${#PATH_STACK[@]}; ++i )); do
     local path="${PATH_STACK[i]}"
+    if [[ "${path}" =~ ^(${histpath%|})$ ]]; then
+      continue
+    fi
+    histpath+="${path}|"
     eval "ls -A1 \"${path#/}\"" | \
     while IFS= read -r item; do
+      if [[ ! -L "${path#/}/${item}" ]]; then
+        continue
+      fi
       eval "lparent=\$(readlink -fn '${path#/}/${item}')"
       lparent="${lparent%/*}"
       if [[ ${FORCEOVERRIDE} == 1 ]] || \
