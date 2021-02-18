@@ -114,6 +114,7 @@ z16 has several configuration files:
    * default parent directory of every instance, it is usually set to a safe path to prevent the system file from possibly being damaged due to the missing parent directory configuration of instance. default to `/tmp/z16.tmp.d`
    * the user of symbolic links and its target files of the instance, default to current effective user
    * the group of symbolic links and its target files of the instance, default to current effective group
+   * comma-seperated ignored file patterns of all instances, every pattern is a POSIX extended regular expression
 
 3. local configuration file for the instance, `<the-instance-dir>/<local-conf-filename>`
 
@@ -122,6 +123,9 @@ z16 has several configuration files:
    * parent directory of this instance, **this config should be set everytime the instance initialized**
    * the user of symbolic links and its target files of this instance, default to the global user setting
    * the group of symbolic links and its target files of this instance, default to the global group setting
+   * comma-seperated ignored file patterns of the current instance, every pattern is a POSIX extended regular expression
+
+The configuration of ignored file patterns are cumulative (the local configuration includes the global ignored configurations). An `!` prefixed pattern is used to remove all exactly matched patterns that have been added before it.
 
 
 ## LICENSE

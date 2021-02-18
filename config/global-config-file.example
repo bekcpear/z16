@@ -7,10 +7,10 @@ INSTLOCALCONFNAME = .z16.l.conf
 # The parent folder path of the instance, absolute path
 PARENTDIR = /tmp/z16.tmp.d
 
-# The owner of the symbolic links
+# The owner of the symbolic links and their targets
 USER =
 
-# The group of the symbolic links
+# The group of the symbolic links and their targets
 GROUP =
 
 # Ignored file patterns which are seperated by commas,

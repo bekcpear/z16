@@ -70,9 +70,9 @@ eval "INIT_VARS[${D_VARS_G[0]}_C]='The local configuration file name of the inst
 eval "INIT_VARS[${D_VARS_G[0]}]=\${D_${D_VARS_G[0]}}"
 eval "INIT_VARS[${D_VARS_G[1]}_C]='The parent folder path of the instance, absolute path'"
 eval "INIT_VARS[${D_VARS_G[1]}]=\${D_${D_VARS_G[1]}}"
-eval "INIT_VARS[${D_VARS_G[2]}_C]='The owner of the symbolic links'"
+eval "INIT_VARS[${D_VARS_G[2]}_C]='The owner of the symbolic links and their targets'"
 eval "INIT_VARS[${D_VARS_G[2]}]=\${D_${D_VARS_G[2]}}"
-eval "INIT_VARS[${D_VARS_G[3]}_C]='The group of the symbolic links'"
+eval "INIT_VARS[${D_VARS_G[3]}_C]='The group of the symbolic links and their targets'"
 eval "INIT_VARS[${D_VARS_G[3]}]=\${D_${D_VARS_G[3]}}"
 eval "INIT_VARS[${D_VARS_G[4]}_C]='Ignored file patterns which are seperated by commas,
 every pattern is a POSIX extended regular expression'"

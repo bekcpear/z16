@@ -15,9 +15,16 @@ function write() {
 #Func: prepare, clear tmpdir #TODO: more reliable
 #      $1 clear or not (BOOL)
 function _preptmp() {
-  [[ ! -d "${Z16_TMPDIR}" ]] || eval "rm -rf '${Z16_TMPDIR}'"
+  local re=''
+  if [[ -d "${Z16_TMPDIR}" ]]; then
+    eval "rm -rf '${Z16_TMPDIR}'"
+    re='re'
+  fi
   if [[ -z ${1} ]]; then
     eval "mkdir -p '${Z16_TMPDIR}'"
+    printlog "---> Temporary directory '${Z16_TMPDIR}' ${re}created."
+  else
+    printlog "<--- Temporary directory '${Z16_TMPDIR}' removed."
   fi
 }
 
@@ -77,7 +84,7 @@ function mklink() {
   local -i i
 
   PATH_STACK=( "${PATH_STACK[@]}" "${c[0]}" )
-  local ldir="${Z16_TMPDIR%/}/${c[0]}"
+  local ldir="${Z16_TMPDIR%/}/${c[0]#/}"
   [[ -d ${ldir} ]] || mkdir -p "${ldir}"
   eval "ssraw=\"\$(_get_list '${p}' ${3})\""
   eval "${ssraw}"
@@ -89,6 +96,7 @@ function mklink() {
   for (( i = 0; i < ${#ss[@]}; ++i )); do
     local ldest
     eval "ldest=\"${ldir}/\$(_parse_dot_prefix '${ss[i]}')\""
+    printlog "---> link '${ldest/${Z16_TMPDIR%/}/<TMPDIR>}' to '${p%/}/${ss[i]}'"
     ln -sn "${p%/}/${ss[i]}" "${ldest}" || ret+=$?
     chown -R ${c[1]}:${c[2]} "${ldest}" || ret+=$?
     #change the user & group of the source file
@@ -99,7 +107,7 @@ function mklink() {
   fi
 }
 
-#Func: merge links from tmp dir to root fs
+#Func: merge links from tmp dir to root fs TODO: harden it
 function merge() {
   printlog ">> Merging to filesystem..." stage
   eval "pushd '${Z16_TMPDIR}' 1>/dev/null 2>${VERBOSEOUT2}"
@@ -116,6 +124,7 @@ function merge() {
             -L "${path}/${item}" && \
             $(readlink -fn "${path}/${item}") =~ ^${lparent} \
          ]]; then
+        printlog "--> merging to '${path}/${item}'"
         [[ ! -d "${path}/${item}" ]] || \
           rm -rf "${path}/${item}" && \
           eval "cp -af \"${path#/}/${item}\" \"${path}/\"" || \
@@ -155,6 +164,7 @@ function rmlink() {
   if [[ ${#links[@]} > 0 ]]; then
     for (( i = 0; i < ${#links[@]}; ++i )); do
       eval "unlink '${links[i]}'"
+      printlog "<--- '${links[i]}' unlinked."
     done
   else
     printlog "Instance '${p##*/}' already unloaded!" warn
