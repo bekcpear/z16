@@ -226,6 +226,7 @@ function list() {
   eval "lists=( \$(ls -1 \${CONFIGS[${D_VARS_Z16[0]}]}) )"
   local i
   for (( i = 0; i < ${#lists[@]}; ++i )); do
+    [[ -d "${CONFIGS[${D_VARS_Z16[0]}]%/}/${lists[i]}" ]] || continue
     echo ${lists[i]}
   done
 }
