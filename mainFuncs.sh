@@ -118,8 +118,10 @@ function _looptomkdir() {
 
       local oownership="${2}"
     fi
-    mkdir -Z "${p}" || ret+=$?
-    eval "chown '${oownership}' '${p}'" || ret+=$?
+    if [[ ${PRETEND} == 0 || -n ${2} ]]; then
+      mkdir -Z "${p}" || ret+=$?
+      eval "chown '${oownership}' '${p}'" || ret+=$?
+    fi
   done
 }
 
@@ -224,7 +226,9 @@ function _merge() {
     if [[ ${FORCEOVERRIDE} == 1 ]] || \
        [[ ! -e "${rsrc#.}" && ! -L "${rsrc#.}" ]]; then
       printlog "--> merging to '${rsrc#.}'"
-      eval "cp -af '${rsrc}' '${crp%/}/'" || ret+=$?
+      if [[ ${PRETEND} == 0 ]]; then
+        eval "cp -af '${rsrc}' '${crp%/}/'" || ret+=$?
+      fi
     else
       printlog "Skip existing: '${rsrc#.}'" warn
     fi
@@ -240,7 +244,9 @@ function merge() {
   done <<< $(ls -A1 .)
   eval "popd 1>/dev/null 2>${VERBOSEOUT2}"
   printlog "** Merged!" stage
-  _preptmp clean
+  if [[ ${PRETEND} == 0 ]]; then
+    _preptmp clean
+  fi
 }
 
 #Func: remove empty directory
@@ -250,7 +256,9 @@ function _rmemptydir() {
   local c=$(ls -A1 "${1}")
   if [[ -z ${c} ]]; then
     printlog "<--- Removing empty directory '${1}'" warn
-    rmdir "${1}" || fatalerr "Remove empty directory error!"
+    if [[ ${PRETEND} == 0 ]]; then
+      rmdir "${1}" || fatalerr "Remove empty directory error!"
+    fi
   fi
 }
 #Func: meta function to unlink
@@ -277,7 +285,9 @@ function _rmlink() {
     if [[ -L "${1}" ]]; then
       if [[ $(readlink "${1}") =~ ^${instp} ]]; then
         printlog "<--- unlinking '${1}'"
-        unlink "${1}" || fatalerr "Unload error!"
+        if [[ ${PRETEND} == 0 ]]; then
+          unlink "${1}" || fatalerr "Unload error!"
+        fi
       else
         printlog "The target of '${1}' is not belong to instance '${INSTANCES[${3}]}', skipping!" warn
       fi
@@ -428,10 +438,12 @@ function execmain() {
       ;;
     load)
       check
+      [[ ${PRETEND} == 0 ]] || printlog "Enter pretend mode!" warn
       load load ${INSTANCES[@]}
       ;;
     unload)
       check
+      [[ ${PRETEND} == 0 ]] || printlog "Enter pretend mode!" warn
       load unload ${INSTANCES[@]}
       ;;
     config)

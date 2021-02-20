@@ -63,7 +63,7 @@ function parseparam() {
     fatalerr "The command 'getopt' of Linux version is necessory to parse parameters."
   fi
   local args
-  args=$(getopt -o 'fvc:' -l 'force,verbose,config:' -n 'z16' -- "$@")
+  args=$(getopt -o 'pfvc:' -l 'pretend,force,verbose,config:' -n 'z16' -- "$@")
   if [[ ${?} != 0 ]]; then
     showhelp
     exit 1
@@ -72,6 +72,10 @@ function parseparam() {
   eval "set -- ${args}"
   while true; do
     case "${1}" in
+      -p|--pretend)
+        PRETEND=1
+        shift
+        ;;
       -f|--force)
         FORCEOVERRIDE=1
         shift
