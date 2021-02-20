@@ -8,6 +8,7 @@
 #
 #  * sys-apps/coreutils
 #  |-- chown
+#  |-- chmod
 #  |-- cp
 #  |-- date
 #  |-- echo
@@ -16,7 +17,7 @@
 #  |-- ls
 #  |-- mkdir
 #  |-- readlink (GNU version)
-#  |-- rm
+#  |-- rmdir
 #  |-- touch
 #  `-- unlink
 #
@@ -57,7 +58,6 @@
 # TODO: rename instance
 # TODO: generate instances through a path list file and restore
 # TODO: database of loaded instances
-# TODO: link files iteratively
 # TODO: about SUID/SGID
 # TODO: SELinux support
 #
@@ -69,7 +69,6 @@ set -Beh
 AVAILABLECMD="init|config|load|unload"
 AVAILABLECMD_NOARGS="list|help"
 declare -a INSTANCES
-declare -a PATH_STACK
 declare -A CONFIGS
 declare -a IGNORES
 CMD='help'
@@ -149,7 +148,7 @@ if [[ -e "${CONFPATH}" ]]; then
   _mkvarnotempty
 fi
 eval "CONFIGS[${D_VARS_Z16[0]}]=\$(_absolutepath '${CONFIGS[${D_VARS_Z16[0]}]}')"
-_fatalrelativepath "${CONFIGS[${D_VARS_Z16[0]}]}"
+_fatalunsupportedpath "${CONFIGS[${D_VARS_Z16[0]}]}"
 
 set +e
 # parse instance global configurations

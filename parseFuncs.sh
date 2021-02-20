@@ -35,19 +35,15 @@ function parseconfigs() {
     if [[ "${opt}" == IGNORE ]]; then
       #parse ignore patterns
       if [[ -n ${val} ]]; then
-        local ignoexe
         local -i nn=0
         val="${val//\\/\\\\}"
         val="${val//\\,/Z16CoMmA-f09448b9-96c6-4f09-8b6f-bb7d5c251943}"
         val="${val//,/\\n}"
         val="${val//Z16CoMmA-f09448b9-96c6-4f09-8b6f-bb7d5c251943/\\,}"
-        eval "ignoexe=\$(echo \"\${val@E}\" | \
         while read -r n; do
-          ${3}[\${nn}]=\"\${n}\"
+          eval "${3}[${nn}]=\"${n}\""
           (( ++nn ))
-          declare -p ${3}
-        done)"
-        eval "${ignoexe##*declare -a }"
+        done <<< "${val@E}"
       fi
     else
       eval "${4}['${opt}']='${val}'"

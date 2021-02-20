@@ -42,10 +42,9 @@ function _init_writevar() {
 #
 \" > '${p}'"
   for (( idx = 0; idx < ${2}; ++idx )); do
-    eval "echo \"\${INIT_VARS[\${${1}[idx]}_C]}\"" | \
-    while read -r comment; do
-      echo "# ${comment}" >> "${p}"
-    done
+    eval "while read -r comment; do
+      echo \"# \${comment}\" >> '${p}'
+    done <<< \"\${INIT_VARS[\${${1}[idx]}_C]}\""
     eval "echo \"${mask}\${${1}[idx]} =\
 \${INIT_VARS[\${${1}[idx]}]:+ }\${INIT_VARS[\${${1}[idx]}]}\" >> '${p}'"
     eval "echo \"\" >> '${p}'"
@@ -74,8 +73,9 @@ eval "INIT_VARS[${D_VARS_G[2]}_C]='The owner of the symbolic links and their tar
 eval "INIT_VARS[${D_VARS_G[2]}]=\${D_${D_VARS_G[2]}}"
 eval "INIT_VARS[${D_VARS_G[3]}_C]='The group of the symbolic links and their targets'"
 eval "INIT_VARS[${D_VARS_G[3]}]=\${D_${D_VARS_G[3]}}"
-eval "INIT_VARS[${D_VARS_G[4]}_C]='Ignored file patterns which are seperated by commas,
-every pattern is a POSIX extended regular expression'"
+eval "INIT_VARS[${D_VARS_G[4]}_C]='Ignored file patterns which are seperated by commas.
+Every pattern is a POSIX extended regular expression, and
+should include the path relative to the instance directory.'"
 eval "INIT_VARS[${D_VARS_G[4]}]=\${D_${D_VARS_G[4]}}"
 _init_customizevar D_VARS_G ${#D_VARS_G[@]}
 eval "GOLCONFPATH=\"\${INIT_VARS[${D_VARS_Z16[0]}]%/}/\${INIT_VARS[${D_VARS_Z16[1]}]}\""

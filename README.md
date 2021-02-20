@@ -76,11 +76,11 @@ The project name is **整** (Unicode: U+6574; pinyin: zhěng). The number of it'
 
    z16 will:
 
-   1. create symbolic links in a temporary directory for all files under the instance directory except the local configuration file, and replace the prefix `dot-`(_case-insensitive_) of filenames to `.`.
+   1. create symbolic links in a temporary directory for all files under the instance directory iteratively (except the local configuration file and ignored files which configured), and replace the prefix `dot-`(_case-insensitive_) of filenames/directories to `.`.
    2. change the ownership of symbolic links and its target files to configured user/group or current effective user/group.
    3. if everything is ok, z16 will merge temporary created symbolic links to the root filesystem.
 
-* `unload` command is used to unlink all symbolic links belonging to given instance(s) directly:
+* `unload` command is used to unlink all symbolic links belonging to given instance(s) directly, and remove all empty directories which belong to instance configured parent path:
 
    ```bash
    z16 unload <configured-instance> [<more-configured-instances>...]

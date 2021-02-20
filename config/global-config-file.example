@@ -13,7 +13,8 @@ USER =
 # The group of the symbolic links and their targets
 GROUP =
 
-# Ignored file patterns which are seperated by commas,
-# every pattern is a POSIX extended regular expression
+# Ignored file patterns which are seperated by commas.
+# Every pattern is a POSIX extended regular expression, and
+# should include the path relative to the instance directory.
 IGNORE =
 

@@ -28,19 +28,20 @@ function _preptmp() {
   fi
 }
 
-#Func: get the list array under a path
-#      $1 path
-#      $2 instance index
-function _get_list() {
-  local ssraw m igno append
-  local -i i=0
-  eval "local -a mi=( \"\${IGNORES_${2}[@]}\" )"
+#Func: get ignore pattern according to the instance
+#      $1: instance index
+#return: POSIX extended regex
+function _get_igno() {
+  local m igno append
+  eval "local -a mi=( \"\${IGNORES_${1}[@]}\" )"
   for igno in "${IGNORES[@]}" "${mi[@]}"; do
     append=1
     if [[ "${igno}" =~ ^! ]]; then
       append=0
       igno="${igno#!}"
     fi
+    #TODO: more detailed
+    igno="${igno#\\\./}"
     igno="${igno/#\?/\\?}"
     igno="${igno/#\+/\\+}"
     igno="${igno/#\*/\\*}"
@@ -51,9 +52,19 @@ function _get_list() {
       m+="${igno}|"
     fi
   done
-  m="^(${m}${CONFIGS[${D_VARS_G[0]}]})$"
+  echo -n "^(${m}${CONFIGS[${D_VARS_G[0]}]})$"
+}
+#Func: get the list array under a path
+#      $1 path
+#      $2 regex
+#return: an array declare string
+function _get_list() {
+  local -i i=0
+  local rpath="${1#${instp}}"
+  rpath="${rpath#/}"
   ssraw="local -a ss=($(eval "ls -A1 ${1}" | while read -r source; do
-    if [[ "${source}" =~ ${m} ]]; then
+    local r="${rpath%/}/${source}"
+    if [[ "${r#/}" =~ ${2} ]]; then
       continue
     fi
     eval "echo -n '[${i}]=\"${source}\" '"
@@ -72,111 +83,229 @@ function _parse_dot_prefix() {
   fi
 }
 
+#Func: loop max 100 times to create directory **with ownership**
+#      $1: path
+#    [$2]: ownership, ommited for merging funcion
+function _looptomkdir() {
+  local -i j k=1
+  local -a pathstack
+  local p="${1%/}"
+  pathstack[0]="${p}"
+  for (( j = 0; j < 100; ++j )); do
+    p="${p%/*}"
+    if [[ ! -e "${p}" ]]; then
+      eval "pathstack[${k}]='${p}'"
+      k+=1
+    else
+      break
+    fi
+    if [[ "${j}" == 99 ]]; then
+      fatalerr "Too many loops when creating directroy!"
+    fi
+  done
+  for (( j = ${#pathstack[@]} - 1; j >= 0; --j )); do
+    p="${pathstack[j]}"
+
+    if [[ -z ${2} ]]; then
+        #This condition only works for merging function, BELOW
+        _checkwriteperm "${p%/*}/" "false"
+        printlog "--> creating directory '${p}'"
+        local oownership="$( ls -nd ".${p}" | { IFS=$' \t' read -r _ _ u g _; echo "${u}:${g}"; } )"
+        [[ "${oownership}" =~ ^[[:digit:]]+:[[:digit:]]+$ ]] || \
+          fatalerr "Merging error! (unrecognized ownership got)"
+        #This condition only works for merging function, ABOVE
+    else
+
+      local oownership="${2}"
+    fi
+    mkdir -Z "${p}" || ret+=$?
+    eval "chown '${oownership}' '${p}'" || ret+=$?
+  done
+}
+
+#Func: meta function to make symbolic links
+#      $1: located directory
+#      $2: path (file or directory)
+#      $3: instance index
+function _mklink() {
+  local p="${2}"
+  if [[ -d "${p}" ]]; then
+    local -i i
+    local ssraw
+    eval "ssraw=\"\$(_get_list '${p}' '${instm}')\""
+    eval "${ssraw}"
+    if [[ ${#ss[@]} == 0 ]]; then
+      return
+    fi
+    for (( i = 0; i < ${#ss[@]}; ++i )); do
+      local rpath
+      eval "rpath=\$(_parse_dot_prefix '${p##*/}')"
+      _mklink "${1%/}/${rpath}" "${p}/${ss[i]}" "${3}"
+    done
+  else
+    local -i ret
+    if [[ ! -e "${1}" ]]; then
+      _looptomkdir "${1}" "${c[1]}:${c[2]}"
+    fi
+    if [[ ! -d "${1}" ]]; then
+      fatalerr "Z16 error: '${1}' is not a directory!"
+    fi
+
+    local ldest
+    eval "ldest=\"${1%/}/\$(_parse_dot_prefix '${p##*/}')\""
+    printlog "---> link '${ldest/#${Z16_TMPDIR%/}/[TMP]}' to '${p}'"
+    ln -sn "${p}" "${ldest}" || ret+=$?
+    eval "chown -h ${c[1]}:${c[2]} '${ldest}'" || ret+=$?
+    if [[ ${ret} > 0 ]]; then
+      fatalerr "Error in making symbolic links of instance '${INSTANCES[${3}]}'!"
+    fi
+  fi
+}
 #Func: make symbolic link
 #      $1: instance dir <STRING>
 #      $2: config <ARRAY>
 #      $3: instance index
 function mklink() {
-  local -i ret=0
-  local p="${1}"
+  local instm instp="${1}"
   eval "${2/declare/local}" # configuration array: c
+  eval "instm=\"\$(_get_igno ${3})\""
+  #sub '_mklink' & '_get_list' function inherit c & instp & instm
+
   local ssraw
-  local -i i
-
-  PATH_STACK=( "${PATH_STACK[@]}" "${c[0]}" )
-  local ldir="${Z16_TMPDIR%/}/${c[0]#/}"
-  [[ -d ${ldir} ]] || mkdir -p "${ldir}"
-  eval "ssraw=\"\$(_get_list '${p}' ${3})\""
+  eval "ssraw=\"\$(_get_list '${instp}' '${instm}')\""
   eval "${ssraw}"
-
   if [[ ${#ss[@]} == 0 ]]; then
-    printlog "Instance '${p##*/}' has no file, continue!" warn
+    printlog "Instance '${INSTANCES[${3}]}' has no file, continue!" warn
     return
   fi
+
+  local -i i ret=0
+  local ldir="${Z16_TMPDIR%/}/${c[0]#/}"
   for (( i = 0; i < ${#ss[@]}; ++i )); do
-    local ldest
-    eval "ldest=\"${ldir}/\$(_parse_dot_prefix '${ss[i]}')\""
-    printlog "---> link '${ldest/${Z16_TMPDIR%/}/<TMPDIR>}' to '${p%/}/${ss[i]}'"
-    ln -sn "${p%/}/${ss[i]}" "${ldest}" || ret+=$?
-    chown -R ${c[1]}:${c[2]} "${ldest}" || ret+=$?
-    #change the user & group of the source file
-    chown -R ${c[1]}:${c[2]} "${p%/}/${ss[i]}" || ret+=$?
+    _mklink "${ldir%/}" "${instp%/}/${ss[i]}" "${3}"
+    #change the user & group of the source files
+    chown -R ${c[1]}:${c[2]} "${instp%/}/${ss[i]}" || ret+=$?
+    if [[ ${ret} > 0 ]]; then
+      fatalerr "Error in changing the ownership of instance '${INSTANCES[${3}]}'!"
+    fi
   done
-  if [[ ${ret} > 0 ]]; then
-    fatalerr "Error in making symbolic links of instance '${p##*/}'!"
-  fi
 }
 
-#Func: merge links from tmp dir to root fs TODO: harden it
+#Func: meta function for merging files TODO: harden it
+#      $1: located path
+#      $2: source file
+function _merge() {
+  if [[ -z $2 ]]; then
+    printlog "No more sources, continue" warn
+    return
+  fi
+
+  local -i ret=0
+  local rsrc="${1}/${2}"
+
+  if [[ -d "${rsrc}" ]]; then
+    while read -r source; do
+      _merge "${rsrc}" "${source}" || fatalerr "Merging error! (sub)"
+    done <<< $(ls -A1 "${rsrc}")
+  else
+    if [[ ! -L "${rsrc}" ]]; then
+      printlog "Skipping non-linked file '${rsrc}'" warn
+      return
+    fi
+    local crp="${1#.}" # corresponding root path
+    if [[ ! -e "${crp}" ]]; then
+      _looptomkdir "${crp}"
+    else
+      _checkwriteperm "${crp}" "false"
+    fi
+    [[ ${ret} == 0 ]] || return ${ret}
+
+    #do merging links
+    if [[ ${FORCEOVERRIDE} == 1 ]] || \
+       [[ ! -e "${rsrc#.}" && ! -L "${rsrc#.}" ]]; then
+      printlog "--> merging to '${rsrc#.}'"
+      eval "cp -af '${rsrc}' '${crp%/}/'" || ret+=$?
+    else
+      printlog "Skip existing: '${rsrc#.}'" warn
+    fi
+  fi
+  return ${ret}
+}
+#Func: merge links from tmp dir to root fs
 function merge() {
   printlog ">> Merging to filesystem..." stage
   eval "pushd '${Z16_TMPDIR}' 1>/dev/null 2>${VERBOSEOUT2}"
-  local histpath=
-  local -i i
-  for (( i = 0; i < ${#PATH_STACK[@]}; ++i )); do
-    local path="${PATH_STACK[i]}"
-    if [[ "${path}" =~ ^(${histpath%|})$ ]]; then
-      continue
-    fi
-    histpath+="${path}|"
-    eval "ls -A1 \"${path#/}\"" | \
-    while IFS= read -r item; do
-      if [[ ! -L "${path#/}/${item}" ]]; then
-        continue
-      fi
-      eval "lparent=\$(readlink -fn '${path#/}/${item}')"
-      lparent="${lparent%/*}"
-      if [[ ${FORCEOVERRIDE} == 1 ]] || \
-         [[ ! -e "${path}/${item}" ]] || \
-         [[ \
-            -L "${path}/${item}" && \
-            $(readlink -fn "${path}/${item}") =~ ^${lparent} \
-         ]]; then
-        printlog "--> merging to '${path}/${item}'"
-        [[ ! -d "${path}/${item}" ]] || \
-          rm -rf "${path}/${item}" && \
-          eval "cp -af \"${path#/}/${item}\" \"${path}/\"" || \
-          fatalerr "Merge error!"
-      else
-        printlog "Skip existing: '${path%/}/${item}'" warn
-      fi
-    done
-  done
+  while read -r source; do
+    _merge "." "${source}" || fatalerr "Merging error!"
+  done <<< $(ls -A1 .)
   eval "popd 1>/dev/null 2>${VERBOSEOUT2}"
   printlog "** Merged!" stage
   _preptmp clean
 }
 
+#Func: remove empty directory
+#      $1: path
+function _rmemptydir() {
+  [[ -d "${1}" ]] || return 0
+  local c=$(ls -A1 "${1}")
+  if [[ -z ${c} ]]; then
+    printlog "<--- Removing empty directory '${1}'" warn
+    rmdir "${1}" || fatalerr "Remove empty directory error!"
+  fi
+}
+#Func: meta function to unlink
+#      $1: corresponding root path
+#      $2: path (file or directory)
+#      $3: instance index
+function _rmlink() {
+  if [[ -d "${2}" ]]; then
+    local -i i
+    local ssraw
+    eval "ssraw=\"\$(_get_list '${2}' '${instm}')\""
+    eval "${ssraw}"
+    if [[ ${#ss[@]} == 0 ]]; then
+      _rmemptydir "${1}"
+      return
+    fi
+    for (( i = 0; i < ${#ss[@]}; ++i )); do
+      local rpath
+      eval "rpath=\$(_parse_dot_prefix '${ss[i]}')"
+      _rmlink "${1%/}/${rpath}" "${2%/}/${ss[i]}" "${3}"
+    done
+    _rmemptydir "${1}"
+  else
+    if [[ -L "${1}" ]]; then
+      if [[ $(readlink "${1}") =~ ^${instp} ]]; then
+        printlog "<--- unlinking '${1}'"
+        unlink "${1}" || fatalerr "Unload error!"
+      else
+        printlog "The target of '${1}' is not belong to instance '${INSTANCES[${3}]}', skipping!" warn
+      fi
+    else
+      [[ -e "${1}" ]] || return 0
+      printlog "Skipping non-linked file '${1}', it's weird!" warn
+    fi
+  fi
+}
 #Func: remove symbolic link
 #      $1: instance dir <STRING>
 #      $2: config <ARRAY>
 #      $3: instance index
 function rmlink() {
-  local -i ret=0
-  local -i i
+  local instm instp="${1%/}"
   eval "${2/declare/local}" # configuration array: c
-  local p="${1}"
+  eval "instm=\"\$(_get_igno ${3})\""
+  #sub '_rmlink' & '_get_list' function inherit c & instp & instm
+
   local ssraw
-  eval "ssraw=\"\$(_get_list '${p}' ${3})\""
+  eval "ssraw=\"\$(_get_list '${instp}' '${instm}')\""
   eval "${ssraw}"
 
-  local -a links
   for (( i = 0; i < ${#ss[@]}; ++i )); do
-    local dest
-    eval "dest=\"${c[0]}/\$(_parse_dot_prefix '${ss[i]}')\""
-    if [[ -L "${dest}" ]]; then
-      links=( "${links[@]}" "${dest}" )
-    fi
+    local rpath
+    eval "rpath=\$(_parse_dot_prefix '${ss[i]}')"
+    _rmlink "${c[0]%/}/${rpath}" "${instp}/${ss[i]}" "${3}"
   done
-
-  if [[ ${#links[@]} > 0 ]]; then
-    for (( i = 0; i < ${#links[@]}; ++i )); do
-      eval "unlink '${links[i]}'"
-      printlog "<--- '${links[i]}' unlinked."
-    done
-  else
-    printlog "Instance '${p##*/}' already unloaded!" warn
-  fi
 }
 
 #Func: init instance

@@ -88,9 +88,12 @@ function _absolutepath() {
 
 #Func: fatal relative path
 #      $1: path
-function _fatalrelativepath() {
+function _fatalunsupportedpath() {
   if [[ ! "${1}" =~ ^/ ]]; then
     fatalerr "Relative path '${1}' detected, please use absolute path!"
+  fi
+  if [[ "${1}" =~ \\/ ]]; then
+    fatalerr "Path should not contains '\/'!"
   fi
 }
 
@@ -101,6 +104,25 @@ function _getuname() {
   local u
   eval "u=\$(getent passwd ${1} | { IFS=':'; read un _; echo -n \${un:-erroruser}; })"
   echo -n "${u}"
+}
+
+#Func: check write permission
+#      $1: path <STRING>
+#      $2: force to add exec permission or not <true|false>
+#    [$3]: extra info
+function _checkwriteperm() {
+  if [[ ! -d "${1}" ]]; then
+    printlog "Skip write permission check for non-directory '${1}'" warn
+    return
+  fi
+  if [[ ! -w "${1}" ]]; then
+    printlog "Has no write permission to path '${1}'${3}" warn
+    fatalerr "You should run z16 with a proper user! Bye~"
+  else
+    if [[ ! -x "${1}" ]]; then
+      [[ "${2}" != "true" ]] || eval "chmod a+x '${1}'" #TODO: Minimally invasive
+    fi
+  fi
 }
 
 #Func: check path, service for check()
@@ -123,7 +145,7 @@ function _checkpath() {
     eval "u=\$(_getuname ${u})"
   fi
   eval "p=\$(_absolutepath '${p}' '${u}')"
-  _fatalrelativepath "${p}"
+  _fatalunsupportedpath "${p}"
   if [[ ! -d "${p}" ]]; then
     eval "local -r d_tmpdir=\"\${D_${D_VARS_G[1]}}\""
     if [[ "${p}" == "${d_tmpdir}" ]]; then
@@ -134,12 +156,7 @@ function _checkpath() {
     fi
   fi
 
-  if [[ ! -w "${p}" ]]; then
-    printlog "Has no write permission to path '${p}' of ${info}." warn
-    fatalerr "You should run z16 with a proper user! Bye~"
-  else
-    [[ -x "${p}" ]] || eval "chmod a+x '${p}'" #TODO: Minimally invasive
-  fi
+  _checkwriteperm "${p}" "true" " of ${info}"
 
   echo -n "${p}"
 }
