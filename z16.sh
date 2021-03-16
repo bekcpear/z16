@@ -29,9 +29,13 @@
 #
 #  * sys-libs/glibc
 #  `-- getent
+#
+#  * net-misc/openssh [optional]
+#  |-- scp
+#  `-- ssh
 
 # paramaters:
-#             commands: init|load|unload|config|help
+#             commands: init|load|fetch|unload|config|list|help
 #     optional options: --/-OPT VALUE !!!TODO
 #             argument: [(<INSTANCE NAME>)]
 
@@ -47,14 +51,8 @@
 #     |-- <INSTANCE-NAME-2>
 #     `-- ...
 
-# about configiguration file, .z16.l.conf:
-#  #parent folder path for the symbolic link
-#   parentdir: <path> (default to /tmp/z16.tmp.d for safety)
-#  #the owner of the link and its dereference file
-#        user: <username>
-#  #the group of the link and its dereference file
-#       group: <groupname>
 #
+# TODO: remove unlinked links when loading instances
 # TODO: rename instance
 # TODO: generate instances through a path list file and restore
 # TODO: database of loaded instances
@@ -66,7 +64,7 @@
 set +abfhkmnptuvBCEHPT
 set -Beh
 
-AVAILABLECMD="init|config|load|unload"
+AVAILABLECMD="init|config|load|fetch|unload"
 AVAILABLECMD_NOARGS="list|help"
 declare -a INSTANCES
 declare -A CONFIGS
@@ -75,9 +73,12 @@ CMD='help'
 
 #READONLY VARIABLE
 declare -r Z16_TMPDIR='/tmp/.z16_tmpdir_de82969a-064c-43d7-b761-6061eb1669f8'
+Z16_OWSP_P='_bd3c8c_z16_ownership'
 #DEFAULT VARIABLES THAT CAN ONLY BE MODIFIED BY COMMAND LINE OPTION
 FORCEOVERRIDE=0
 PRETEND=0
+Z16_SSH_RAW=
+declare -A Z16_SSH=([IDENTITYOPTS]="" [USER]="" [HOSTNAME]="" [PORT]=22 [MUX_TIMEOUT]=600 [KEEP]=0)
 VERBOSEOUT1=/dev/null
 VERBOSEOUT2=/dev/null
 declare -r SYSCONFPATH="/etc/z16/z16rc"
@@ -105,24 +106,18 @@ eval "D_${D_VARS_G[2]}=''"
 eval "D_${D_VARS_G[3]}=''"
 eval "D_${D_VARS_G[4]}=''"
 
-#current user and groups
-CUSER=$(id -u)
-CGROUP=$(id -g)
-CGROUPS_A=( $(id -G) )
+CUSER=
+CGROUP=
 CGROUPS=
-for CGROUPTMP in "${CGROUPS_A[@]}"; do
-  CGROUPS="${CGROUPS}|^${CGROUPTMP}\$"
-done
-CGROUPS="${CGROUPS#|}"
-unset CGROUPS_A CGROUPTMP
 
 SPATH="${0}"
 if [[ -L "${SPATH}" ]]; then
   eval "SPATH=\$(readlink '${SPATH}')"
 fi
-source "${SPATH%/*}"/parseFuncs.sh
-source "${SPATH%/*}"/helperFuncs.sh
-source "${SPATH%/*}"/mainFuncs.sh
+source "${SPATH%/*}"/meta.sh
+source "${SPATH%/*}"/helper.sh
+source "${SPATH%/*}"/parse.sh
+source "${SPATH%/*}"/main.sh
 
 # parse shell parameters
 #
@@ -130,7 +125,7 @@ parseparam "$@"
 
 # do initialize configurations
 #
-source "${SPATH%/*}"/init.sh
+source "${SPATH%/*}"/initZ16.sh
 
 # parse shell configurations
 #

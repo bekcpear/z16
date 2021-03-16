@@ -63,31 +63,62 @@ function parseparam() {
     fatalerr "The command 'getopt' of Linux version is necessory to parse parameters."
   fi
   local args
-  args=$(getopt -o 'pfvc:' -l 'pretend,force,verbose,config:' -n 'z16' -- "$@")
+  args=$(getopt -o 'P:c:fi:k::ps:v' -l 'port:,config:,force,identity-file:,keep-alive::,pretend,ssh-destination:,verbose' -n 'z16' -- "$@")
   if [[ ${?} != 0 ]]; then
     showhelp
     exit 1
   fi
   set -e
+
+  # parse arguments
   eval "set -- ${args}"
   while true; do
     case "${1}" in
-      -p|--pretend)
-        PRETEND=1
+      -P|--port)
+        shift
+        if [[ ${1} =~ ^[[:digit:]]+$ ]]; then
+          Z16_SSH[PORT]=${1}P
+        else
+          printlog "Unrecognized ssh port: '${1}', use default '${Z16_SSH[PORT]}' instead." warn
+        fi
+        shift
+        ;;
+      -c|--config)
+        shift
+        CONFPATH="${1}"
         shift
         ;;
       -f|--force)
         FORCEOVERRIDE=1
         shift
         ;;
+      -i|--identity-file)
+        shift
+        Z16_SSH[IDENTITYOPTS]+="-i '${1}' "
+        shift
+        ;;
+      -k|--keep-alive)
+        shift
+        Z16_SSH[KEEP]=1
+        if [[ ${1} =~ ^[[:digit:]]+$ ]]; then
+          Z16_SSH[MUX_TIMEOUT]=${1}
+        elif [[ -n ${1} ]]; then
+          printlog "Unrecognized timeout argument: '${1}', use default '${Z16_SSH[MUX_TIMEOUT]}' instead." warn
+        fi
+        shift
+        ;;
+      -p|--pretend)
+        PRETEND=1
+        shift
+        ;;
+      -s|--ssh-destination)
+        shift
+        Z16_SSH_RAW="${1}"
+        shift
+        ;;
       -v|--verbose)
         VERBOSEOUT1='&1'
         VERBOSEOUT2='&2'
-        shift
-        ;;
-      -c|--config)
-        shift
-        CONFPATH="${1}"
         shift
         ;;
       --)
@@ -99,6 +130,8 @@ function parseparam() {
         ;;
     esac
   done
+
+  # check action
   local cmd
   local avacmd=( ${AVAILABLECMD//|/ } ${AVAILABLECMD_NOARGS//|/ } )
   for cmd in ${avacmd[@]}; do
@@ -115,6 +148,8 @@ function parseparam() {
     eval "printlog 'args: \"${@}\" ignored' warn"
     return
   fi
+
+  # parse instance name
   for arg; do
     case "${arg}" in
       -*)
@@ -136,6 +171,31 @@ function parseparam() {
         ;;
     esac
   done
+
+  # check ssh configurations and unify
+  if [[ -n ${Z16_SSH_RAW} ]]; then
+    local sshconfraw
+    eval "sshconfraw=\"\$(ssh ${Z16_SSH[IDENTITYOPTS]} -G ${Z16_SSH_RAW})\"" || \
+      fatalerr "Get SSH configurations error!" $?
+    while read -r line; do
+      case "${line}" in
+        user*)
+          Z16_SSH[USER]="${line#* }"
+          ;;
+        hostname*)
+          Z16_SSH[HOSTNAME]="${line#* }"
+          ;;
+        port*)
+          if [[ ! ${Z16_SSH[PORT]} =~ P$ ]]; then
+            Z16_SSH[PORT]="${line#* }"
+          fi
+          ;;
+      esac
+    done <<< "$(echo "${sshconfraw}" | grep -E '^user\s|^hostname\s|^port\s|^identityfile\s')"
+    if [[ ${Z16_SSH[PORT]} =~ P$ ]]; then
+      Z16_SSH[PORT]="${Z16_SSH[PORT]%P}"
+    fi
+  fi
 }
 
 # vim: et:ts=2:sts:sw=2
