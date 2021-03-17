@@ -80,7 +80,11 @@ function _copy() {
   local src="${1}"
   local dest="${2}"
   if [[ -z ${Z16_SSH[HOSTNAME]} ]]; then
-    eval "cp -af '${src}' '${dest}'" || ret+=$?
+    if [[ ${PRETEND} == 1 ]]; then
+      echo "[Pretend ] cp -af '${src}' '${dest}'"
+    else
+      eval "cp -af '${src}' '${dest}'" || ret+=$?
+    fi
   else
     local rsrc oownership
     rsrc=$(readlink "${src}")
@@ -208,7 +212,7 @@ function merge() {
   done
   eval "popd 1>/dev/null 2>${VERBOSEOUT2}"
   printlog "** Merged!" stage
-  : #_preptmp clean
+  _preptmp clean
 }
 
 #Func: meta function to make symbolic links
@@ -269,6 +273,7 @@ function mklink() {
   fi
 
   local ldir="${Z16_TMPDIR%/}/${c[0]#/}"
+  local -i i
   for (( i = 0; i < ${#ss[@]}; ++i )); do
     _mklink "${ldir%/}" "${instp%/}/${ss[i]}" "${3}"
     #change the user & group of the source files

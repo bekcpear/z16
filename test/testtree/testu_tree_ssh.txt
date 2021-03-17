@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<tree>
+  <directory name="/home/testr/tmp/test1">
+    <directory name="11" user="testr" group="testr">
+      <file name="test12" user="testr" group="testr"></file>
+    </directory>
+    <file name=".12" user="testr" group="testr"></file>
+    <directory name=".13" user="testr" group="testr">
+      <file name=".x" user="testr" group="testr"></file>
+      <file name=".y" user="testr" group="testr"></file>
+    </directory>
+    <directory name=".14" user="testr" group="testr">
+      <file name="tesss" user="testr" group="testr"></file>
+    </directory>
+    <file name=".15" user="testr" group="testr"></file>
+    <file name="test10" user="testr" group="testr"></file>
+    <file name="test11" user="testr" group="testr"></file>
+  </directory>
+  <report>
+    <directories>3</directories>
+    <files>8</files>
+  </report>
+</tree>

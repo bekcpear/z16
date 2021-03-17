@@ -14,6 +14,7 @@ declare -A INIT_VARS
 #      $1 variable name
 #      $2 the count of variable elements
 function _init_customizevar() {
+  local -i idx
   for (( idx = 0; idx < ${2}; ++idx )); do
     eval "echo \"\${INIT_VARS[\${${1}[idx]}_C]}\"" | \
     while read -r comment; do
@@ -36,6 +37,7 @@ function _init_customizevar() {
 #      $3 the path of the configuration file
 #      $4 the description of the file
 function _init_writevar() {
+  local -i idx
   local p="${3}"
   [[ -e "${p%/*}" ]] || mkdir -p "${p%/*}"
   eval "echo \"# ${4}

@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<tree>
+  <directory name="/rootfs">
+    <directory name="etc" user="root" group="root">
+      <directory name=".d" user="root" group="root">
+        <directory name="a" user="root" group="root">
+          <link name="t0" target="/rootfs/var/lib/z16/test0/dot-d/a/t0" user="root" group="root"></link>
+        </directory>
+        <directory name="b" user="root" group="root">
+          <link name="t2" target="/rootfs/var/lib/z16/test0/.d/b/t2" user="root" group="root"></link>
+        </directory>
+        <link name=".t0" target="/rootfs/var/lib/z16/test0/.d/.t0" user="root" group="root"></link>
+        <link name=".t1" target="/rootfs/var/lib/z16/test0/.d/dot-t1" user="root" group="root"></link>
+      </directory>
+      <directory name="default" user="root" group="root">
+      </directory>
+      <link name=".my" target="/rootfs/var/lib/z16/test0/dot-my" user="root" group="root"></link>
+      <directory name="t" user="root" group="root">
+        <directory name="d" user="root" group="root">
+          <directory name="b" user="root" group="root">
+            <directory name="ig1" user="root" group="root">
+              <link name="t1" target="/rootfs/var/lib/z16/test0/t/d/b/ig1/t1" user="root" group="root"></link>
+            </directory>
+          </directory>
+        </directory>
+        <link name="t0" target="/rootfs/var/lib/z16/test0/t/t0" user="root" group="root"></link>
+      </directory>
+      <link name=".x" target="/rootfs/var/lib/z16/test0/.x" user="root" group="root"></link>
+      <directory name="z16" user="root" group="root">
+        <file name="z16rc" user="root" group="root"></file>
+      </directory>
+    </directory>
+    <directory name="home" user="root" group="root">
+      <directory name="testr" user="root" group="root">
+        <directory name=".config" user="root" group="root">
+        </directory>
+        <directory name=".vim" user="root" group="root">
+        </directory>
+      </directory>
+    </directory>
+    <directory name="tmp" user="root" group="root">
+      <directory name="test" user="root" group="root">
+      </directory>
+    </directory>
+    <directory name="var" user="root" group="root">
+      <directory name=".1" user="root" group="root">
+        <directory name="testd" user="root" group="root">
+        </directory>
+      </directory>
+      <directory name="1" user="root" group="root">
+        <file name="ttt" user="root" group="root"></file>
+      </directory>
+      <directory name="db" user="root" group="root">
+        <directory name="repo" user="root" group="root">
+        </directory>
+      </directory>
+      <directory name="lib" user="root" group="root">
+        <directory name="z16" user="root" group="root">
+          <directory name="test0" user="root" group="root">
+            <directory name=".d" user="root" group="root">
+              <directory name="b" user="root" group="root">
+                <file name="t2" user="root" group="root"></file>
+              </directory>
+              <file name="dot-t1" user="root" group="root"></file>
+              <file name=".t0" user="root" group="root"></file>
+            </directory>
+            <directory name="dot-d" user="root" group="root">
+              <directory name="a" user="root" group="root">
+                <file name="t0" user="root" group="root"></file>
+              </directory>
+            </directory>
+            <file name="dot-my" user="root" group="root"></file>
+            <directory name="ig0" user="root" group="root">
+              <directory name="aa" user="root" group="root">
+                <directory name="b" user="root" group="root">
+                  <file name="t2" user="root" group="root"></file>
+                </directory>
+                <file name="t1" user="root" group="root"></file>
+              </directory>
+              <file name="t0" user="root" group="root"></file>
+            </directory>
+            <directory name="t" user="root" group="root">
+              <directory name="d" user="root" group="root">
+                <directory name="b" user="root" group="root">
+                  <directory name="ig1" user="root" group="root">
+                    <file name="t1" user="root" group="root"></file>
+                  </directory>
+                </directory>
+              </directory>
+              <file name="t0" user="root" group="root"></file>
+            </directory>
+            <file name=".x" user="root" group="root"></file>
+            <file name=".z16.l.conf" user="root" group="root"></file>
+          </directory>
+          <directory name="test1" user="root" group="root">
+            <directory name="1" user="root" group="root">
+              <directory name="2" user="root" group="root">
+                <directory name="3" user="root" group="root">
+                </directory>
+              </directory>
+              <file name="t1" user="root" group="root"></file>
+            </directory>
+            <directory name="dot-1" user="root" group="root">
+              <directory name="2" user="root" group="root">
+                <directory name=".3" user="root" group="root">
+                </directory>
+              </directory>
+            </directory>
+            <file name=".ig0" user="root" group="root"></file>
+            <file name="ig0" user="root" group="root"></file>
+            <directory name="ig1" user="root" group="root">
+              <directory name=".ig2" user="root" group="root">
+              </directory>
+              <directory name="ig2" user="root" group="root">
+                <file name="t0" user="root" group="root"></file>
+              </directory>
+            </directory>
+            <directory name=".one" user="root" group="root">
+              <directory name="two" user="root" group="root">
+              </directory>
+            </directory>
+            <file name=".z16.l.conf" user="root" group="root"></file>
+          </directory>
+          <directory name="test_testrhome" user="root" group="root">
+            <directory name="11" user="root" group="root">
+              <file name="test12" user="root" group="root"></file>
+            </directory>
+            <directory name=".14" user="root" group="root">
+              <file name="tesss" user="root" group="root"></file>
+            </directory>
+            <file name=".15" user="root" group="root"></file>
+            <file name="dot-12" user="root" group="root"></file>
+            <directory name="dot-13" user="root" group="root">
+              <file name="dot-x" user="root" group="root"></file>
+              <file name=".y" user="root" group="root"></file>
+            </directory>
+            <file name="test10" user="root" group="root"></file>
+            <file name="test11" user="root" group="root"></file>
+            <file name=".z16.l.conf" user="root" group="root"></file>
+          </directory>
+          <file name=".z16.g.conf" user="root" group="root"></file>
+        </directory>
+      </directory>
+    </directory>
+  </directory>
+  <report>
+    <directories>52</directories>
+    <files>37</files>
+  </report>
+</tree>

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<tree>
+  <directory name="/home/testr/tmp/test1">
+    <directory name="11" user="testr" group="testr">
+      <link name="test12" target="/rootfs/var/lib/z16/test_testrhome/11/test12" user="testr" group="testr"></link>
+    </directory>
+    <link name=".12" target="/rootfs/var/lib/z16/test_testrhome/dot-12" user="testr" group="testr"></link>
+    <directory name=".13" user="testr" group="testr">
+      <link name=".x" target="/rootfs/var/lib/z16/test_testrhome/dot-13/dot-x" user="testr" group="testr"></link>
+      <link name=".y" target="/rootfs/var/lib/z16/test_testrhome/dot-13/.y" user="testr" group="testr"></link>
+    </directory>
+    <directory name=".14" user="testr" group="testr">
+      <link name="tesss" target="/rootfs/var/lib/z16/test_testrhome/.14/tesss" user="testr" group="testr"></link>
+    </directory>
+    <link name=".15" target="/rootfs/var/lib/z16/test_testrhome/.15" user="testr" group="testr"></link>
+    <link name="test10" target="/rootfs/var/lib/z16/test_testrhome/test10" user="testr" group="testr"></link>
+    <link name="test11" target="/rootfs/var/lib/z16/test_testrhome/test11" user="testr" group="testr"></link>
+  </directory>
+  <report>
+    <directories>3</directories>
+    <files>8</files>
+  </report>
+</tree>

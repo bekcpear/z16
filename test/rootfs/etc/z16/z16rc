@@ -1,0 +1,9 @@
+# This is the main configuration file of z16.
+#
+
+# The directory to store instances, absolute path
+INSTDIR = /rootfs/var/lib/z16
+
+# The global configuration file name of instances
+INSTGLOBALCONFNAME = .z16.g.conf
+

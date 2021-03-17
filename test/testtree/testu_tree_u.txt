@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<tree>
+  <directory name="/home/testr/tmp/test1">
+  </directory>
+  <report>
+    <directories>0</directories>
+    <files>0</files>
+  </report>
+</tree>

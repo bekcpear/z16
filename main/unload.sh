@@ -76,6 +76,7 @@ function rmlink() {
   eval "ssraw=\"\$(_get_list '${instp}' '${instm}')\""
   eval "${ssraw}"
 
+  local -i i
   for (( i = 0; i < ${#ss[@]}; ++i )); do
     local rpath
     eval "rpath=\$(_parse_dot_prefix '${ss[i]}')"
