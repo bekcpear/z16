@@ -18,14 +18,16 @@ options:
                                specified time (default to 600 seconds).
   -p, --pretend              Pretend to load/unload instances(temporary files
                                will be created anyway).
-  -s, --ssh-destination=
+  -P, --port=NUMBER          Use this ssh port number instead of any others.
+  -s, --ssh-destination=DEST SSH destination, the same format as the ssh command.
   -v, --verbose              Show more informations.
 
 commands:
   init   (<instance>)        Initialize instance(s).
   load   (<instance>)        Create symbolic links to files of the instance(s).
-  fetch  (<instance>)        Fetch remote files according to the instance(s) via ssh.
+  fetch  (<instance>)        !TODO, Fetch files according to the instance(s).
   unload (<instance>)        Remove symbolic links belonging to the instance(s).
+  config (<instance>)        !TODO, Configure instance(s).
   list                       List all instances.
   help                       Show this help message.
 "

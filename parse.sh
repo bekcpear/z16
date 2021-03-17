@@ -100,7 +100,7 @@ function parseparam() {
       -k|--keep-alive)
         shift
         Z16_SSH[KEEP]=1
-        if [[ ${1} =~ ^[[:digit:]]+$ ]]; then
+        if [[ ${1} =~ ^[[:digit:]]+(s|S|m|M|h|H|d|D|w|W)?$ ]]; then
           Z16_SSH[MUX_TIMEOUT]=${1}
         elif [[ -n ${1} ]]; then
           printlog "Unrecognized timeout argument: '${1}', use default '${Z16_SSH[MUX_TIMEOUT]}' instead." warn
