@@ -190,6 +190,11 @@ function parseparam() {
             Z16_SSH[PORT]="${line#* }"
           fi
           ;;
+        identityfile*)
+          if [[ -z ${Z16_SSH[IDENTITYOPTS]} ]]; then
+            Z16_SSH[IDENTITYOPTS]+="-i '${line#* }' "
+          fi
+          ;;
       esac
     done <<< "$(echo "${sshconfraw}" | grep -E '^user\s|^hostname\s|^port\s|^identityfile\s')"
     if [[ ${Z16_SSH[PORT]} =~ P$ ]]; then
