@@ -27,6 +27,8 @@ function config() {
   eval "declare -p CONFIGS_${3}"
   printlog "  Instance '${INSTANCES[${3}]}' ignored patterns:" conf
   eval "declare -p IGNORES_${3}"
+  _get_igno ${3}
+  echo
 }
 
 # vim: et:ts=2:sts:sw=2

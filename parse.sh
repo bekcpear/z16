@@ -38,12 +38,12 @@ function parseconfigs() {
         local -i nn=0
         val="${val//\\/\\\\}"
         val="${val//\\,/Z16CoMmA-f09448b9-96c6-4f09-8b6f-bb7d5c251943}"
-        val="${val//,/\\n}"
+        val="${val//,/$'\n'}"
         val="${val//Z16CoMmA-f09448b9-96c6-4f09-8b6f-bb7d5c251943/\\,}"
         while read -r n; do
           eval "${3}[${nn}]=\"${n}\""
           (( ++nn ))
-        done <<< "${val@E}"
+        done <<< "${val}"
       fi
     else
       eval "${4}['${opt}']='${val}'"
