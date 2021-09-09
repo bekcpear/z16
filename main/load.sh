@@ -116,6 +116,9 @@ function _looptomkdir() {
   pathstack[0]="${p}"
   for (( j = 0; j < 100; ++j )); do
     p="${p%/*}"
+    if [[ ${p} == "" ]]; then
+      p="/"
+    fi
     if [[ -n "${2}" && ! -e "${p}" ]] || \
       { [[ -z "${2}" ]] && ! _is_existed "${p}"; }; then
       eval "pathstack[${k}]='${p}'"
