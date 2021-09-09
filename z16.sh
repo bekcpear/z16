@@ -17,6 +17,7 @@
 #  |-- ls
 #  |-- mkdir
 #  |-- readlink (GNU version)
+#  |-- realpath
 #  |-- rmdir
 #  |-- touch
 #  `-- unlink
@@ -112,7 +113,7 @@ CGROUPS=
 
 SPATH="${0}"
 if [[ -L "${SPATH}" ]]; then
-  eval "SPATH=\$(readlink '${SPATH}')"
+  eval "SPATH=\$(realpath '${SPATH}')"
 fi
 source "${SPATH%/*}"/meta.sh
 source "${SPATH%/*}"/helper.sh
