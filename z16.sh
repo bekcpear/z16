@@ -53,6 +53,7 @@
 #     `-- ...
 
 #
+# TODO: merge specified path
 # TODO: remove unlinked links when loading instances
 # TODO: rename instance
 # TODO: generate instances through a path list file and restore
