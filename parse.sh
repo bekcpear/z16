@@ -174,7 +174,7 @@ function parseparam() {
 
   # check ssh configurations and unify
   if [[ -n ${Z16_SSH_RAW} ]]; then
-    local sshconfraw
+    local sshconfraw _idfpath
     eval "sshconfraw=\"\$(ssh ${Z16_SSH[IDENTITYOPTS]} -G ${Z16_SSH_RAW})\"" || \
       fatalerr "Get SSH configurations error!" $?
     while read -r line; do
@@ -192,7 +192,10 @@ function parseparam() {
           ;;
         identityfile*)
           if [[ -z ${Z16_SSH[IDENTITYOPTS]} ]]; then
-            Z16_SSH[IDENTITYOPTS]+="-i '${line#* }' "
+            _idfpath=$(_absolutepath ${line#* })
+            if [[ -e ${_idfpath} ]]; then
+              Z16_SSH[IDENTITYOPTS]+="-i '${_idfpath}' "
+            fi
           fi
           ;;
       esac
